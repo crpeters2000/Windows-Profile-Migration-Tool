@@ -1,0 +1,22 @@
+# Backup files and directories
+Backups/
+backup.ps1
+
+# Log files and directories
+Logs/
+
+# Internal documentation (not for public repo)
+CLEANUP_WIZARD_FEATURE.md
+copilot-instructions.md
+GUI_MODERNIZATION_SUMMARY.md
+IMPROVEMENTS_IMPLEMENTED.md
+
+# Windows thumbnail cache
+Thumbs.db
+
+# macOS files
+.DS_Store
+
+# Temporary files
+*.tmp
+*.temp
