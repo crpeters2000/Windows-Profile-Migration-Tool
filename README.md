@@ -1,7 +1,53 @@
+# ProfileMigration.ps1
+
+ProfileMigration.ps1 is a PowerShell 5.1 GUI tool for Windows profile migration. It supports domain, local, and AzureAD/Entra ID moves, registry hive SID rewriting, multi-threaded file operations, and a modern Windows Forms UI. Production-ready for Windows 11 24H2.
+
+## Features
+- Export/import/merge user profiles (local, domain, AzureAD/Entra ID)
+- Robust AzureAD/Entra ID detection (SID pattern, even for DOMAIN\user format)
+
+- Registry hive SID rewrite (binary + string)
+- Multi-threaded file copy (Robocopy)
+- 7-Zip compression (auto-detect/install)
+
+- Full HTML migration report
+- Modern, flat Windows Forms UI
+- Detailed logging (DEBUG/INFO/WARN/ERROR)
+
+- Progress bar, status, and log viewer
+- Domain join after import (optional)
+- Winget app install (optional)
+
+## Usage
+**Run as Administrator:**
+```powershell
+
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\ProfileMigration.ps1
+```
+
+Or right-click → "Run with PowerShell" (auto-elevates)
+
+## Key Improvements (2025)
+- Accurate AzureAD/Entra ID detection for all user formats (including DOMAIN\user)
+
+- Improved error and success dialogs (taller, all info visible)
+- Modernized UI and status feedback
+- Debug logging for troubleshooting (removed in production)
+
+## Documentation
+- [USER-GUIDE.md](USER-GUIDE.md): Step-by-step usage
+- [CONFIGURATION.md](CONFIGURATION.md): All config options
+- [TECHNICAL-DOCS.md](TECHNICAL-DOCS.md): Architecture, workflows
+
+- [FAQ.md](FAQ.md): Troubleshooting
+
+## Support
+See [Logs/](Logs/) for daily logs. For issues, see FAQ or contact IT support.
 # Windows Profile Migration Tool
 
-**Version:** November 2025  
-**Tested on:** Windows 11 24H2 (Build 26100.3194+)  
+**Version:** December 2025  
+**Tested on:** Windows 11 25H2 (26200.7462)  
 **Status:** Production Ready
 
 ## Overview
@@ -14,6 +60,7 @@ The Windows Profile Migration Tool is an enterprise-grade PowerShell application
 - ✅ **Full Profile Export/Import** - Complete user profile migration with all settings preserved
 - ✅ **Multi-Threaded Performance** - 2-3x faster compression using all CPU cores
 - ✅ **Local & Domain Users** - Support for both local accounts and Active Directory users
+- ✅ **AzureAD/Entra ID Support** - Seamless migration of Microsoft Entra ID (AzureAD) profiles
 - ✅ **Hash Verification** - SHA-256 integrity checking for exported archives
 - ✅ **Merge or Replace Modes** - Flexible import options for existing profiles
 - ✅ **Automatic Backup** - Timestamped backups before any destructive operations
@@ -75,11 +122,31 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 
 ### 3. Import a Profile
 1. Click **Browse** to select the exported `.zip` file
-2. Enter the target username (or select existing)
+2. Enter the target username:
+   - Local user: `username`
+   - Domain user: `DOMAIN\username`
+   - **AzureAD user: `AzureAD\username`**
 3. Choose **Merge** or **Replace** mode (if profile exists)
 4. Click **Import** button
 5. Follow prompts for user creation (if needed)
-6. Reboot and login after completion
+6. **For AzureAD profiles**: Join device to Entra ID if prompted, sign in with work/school account
+7. Reboot and login after completion
+
+### 4. AzureAD/Entra ID Profiles (Special Instructions)
+
+**Exporting AzureAD profiles:**
+- Works automatically - the tool detects AzureAD accounts (SID starts with S-1-12-1)
+- Profile is tagged as AzureAD in the manifest
+
+**Importing AzureAD profiles:**
+1. Use format: `AzureAD\username` (e.g., `AzureAD\john.doe`)
+2. If the device is not AzureAD joined, the tool will:
+   - Open Settings → Access work or school
+   - Guide you to select "Join this device to Microsoft Entra ID"
+   - Wait for you to complete the join process
+3. **Important**: Sign in with the AzureAD account at least once before importing
+4. The tool will then import the profile to the existing AzureAD account
+5. After the account has been logged in once use the drop down to select targer user.  Will show as Tenant\user
 
 ## Documentation
 
@@ -217,7 +284,7 @@ This tool is provided as-is for enterprise IT use. See LICENSE file for details.
 
 ## Version History
 
-### November 2025 - Current Version
+### December 2025 - Current Version
 - Multi-threaded compression (2-3x performance improvement)
 - HTML migration reports with detailed statistics
 - CPU core auto-detection and dynamic threading

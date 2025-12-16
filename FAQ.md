@@ -348,6 +348,28 @@ Copy-Item "C:\Users\john.backup_TIMESTAMP\NTUSER.DAT" "C:\Users\john\" -Force
 - DNS configured to find domain
 - Domain admin credentials
 
+### Q: Can I migrate AzureAD/Entra ID profiles?
+**A:** Yes! Full support for Microsoft Entra ID (formerly AzureAD):
+
+**Export (automatic):**
+- Tool detects AzureAD profiles by SID pattern (S-1-12-1)
+- Profile is tagged as AzureAD in manifest
+- Export works normally
+
+**Import (requires setup):**
+1. Target computer **must be Entra ID joined**
+2. User **must sign in** with work/school account at least once
+3. Enter username as: `AzureAD\username` (e.g., `AzureAD\john.doe`)
+4. Tool validates device join status
+5. If not joined, tool opens Settings → Access work or school
+6. Complete join, sign in, then retry import
+
+**Key differences from domain migration:**
+- Username format: `AzureAD\username` (NOT email address)
+- No domain admin credentials needed
+- Device must be joined via Settings app
+- Tool provides guided setup with `ms-settings:workplace` link
+
 ### Q: Domain join fails. What's wrong?
 **A:** Check these:
 

@@ -1,3 +1,29 @@
+# ProfileMigration.ps1 – User Guide
+
+## Getting Started
+1. Run as Administrator:
+   ```powershell
+   Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+2. Select user profile (local, domain, or AzureAD/Entra ID)
+3. Click "Set Target User" (robust detection for AzureAD/Entra ID, even if selected as DOMAIN\user)
+4. Use Export or Import as needed
+## Exporting a Profile
+1. Click "Set Target User" and confirm user type
+2. Click "Export"
+## Importing a Profile
+1. Click "Set Target User" and confirm user type
+2. Click "Browse" select .zip
+2. Click "Import"
+## AzureAD/Entra ID Users
+- Tool detects AzureAD/Entra ID users by SID pattern (S-1-12-1-...)
+- Handles DOMAIN\username and AzureAD\username formats
+- Device must be AzureAD joined
+## Dialogs & UI
+- Modern flat design, color-coded status
+- Custom dialogs for errors/success (taller for full info display)
+- Improved dialog sizing for all feedback (2025)
+## Troubleshooting
+- See [FAQ.md](FAQ.md) and [Logs/](Logs/)
 # User Guide - Windows Profile Migration Tool
 
 ## Table of Contents
@@ -21,12 +47,7 @@ Before starting, ensure you have:
 
 ### Launching the Tool
 
-**Method 1: Right-Click (Recommended)**
-1. Right-click `ProfileMigration.ps1`
-2. Select **Run with PowerShell**
-3. If prompted, click **Yes** to allow administrator elevation
-
-**Method 2: PowerShell Console**
+**Method 1: PowerShell Console**
 1. Open PowerShell as Administrator
 2. Navigate to tool directory:
    ```powershell
@@ -44,7 +65,7 @@ Before starting, ensure you have:
 ### First Launch
 
 When the tool starts, you'll see:
-- **User Selection Dropdown** - Shows all local user profiles with sizes
+- **User Selection Dropdown** - To see sizes click the "R" button
 - **Export/Import Buttons** - Main operation controls
 - **Log Viewer** - Real-time operation logging
 - **Progress Bar** - Visual progress indicator
@@ -111,11 +132,6 @@ When finished, you'll have:
 3. Click **Open**
 4. ZIP path shows in text field
 
-**Auto-Detection:**
-- Tool extracts username from filename: `user-Export-20251207_143022.zip` → `user`
-- Username field is auto-populated
-- Edit username if importing to different account
-
 #### 2. Enter Target Username
 Enter username in one of these formats:
 
@@ -132,6 +148,18 @@ COMPUTERNAME\username
 ```
 DOMAIN\username
 ```
+
+**For AzureAD/Entra ID Users:**
+```
+AzureAD\username
+```
+**Example:** `AzureAD\john.doe` (NOT `john.doe@company.com`)
+
+**Important for AzureAD:**
+- Device must be Entra ID joined (Settings → Access work or school)
+- User must sign in with work/school account before import
+- Tool validates join status and provides guided setup if needed
+- If user has already logged in select it from the dropdown
 
 #### 3. Start Import
 Click the **Import** button
@@ -248,12 +276,11 @@ The tool includes integrated domain join capability:
 
 ### Domain User Migration
 When importing for domain users:
-1. Ensure computer is domain-joined first
-2. Use format: `DOMAIN\username` in import
-3. Provide domain admin credentials when prompted
-4. User account is queried from Active Directory
-5. Profile configured with correct domain SID
-6. User can login immediately after reboot
+1. Use format: `DOMAIN\username` in import
+2. Provide domain admin credentials when prompted
+3. User account is queried from Active Directory
+4. Profile configured with correct domain SID
+5. User can login immediately after reboot
 
 ---
 
@@ -299,18 +326,12 @@ When importing for domain users:
 **Built-in log viewer features:**
 
 1. **Level Filtering Dropdown:**
-   - ALL - Shows everything
+   - DEBUG - Shows everything
    - INFO - Normal operations (default)
    - WARN - Warnings and errors
    - ERROR - Only critical failures
 
-2. **Search Box:**
-   - Type keyword to filter log entries
-   - Real-time filtering
-   - Case-insensitive
-   - Combines with level filter
-
-3. **Auto-Scroll:**
+2. **Auto-Scroll:**
    - Automatically follows new log entries
    - Temporarily pauses when scrolling up
    - Resumes when scrolled to bottom
@@ -421,14 +442,10 @@ When importing for domain users:
 2. Note current computer name
 
 **Target Computer (Domain):**
-1. Join computer to domain first
-2. Import profile using local username format
-3. User login with local account
-4. Export profile again (now as local user)
-5. Import profile using `DOMAIN\username` format
-6. Provide domain credentials when prompted
-7. Reboot
-8. Login with domain account
+1. Import profile using DOMAIN\username format
+2. Provide domain credentials when prompted
+3. Reboot
+4. Login with domain account
 
 ### Workflow 3: Profile Corruption Recovery
 **Scenario:** User profile corrupted, using last good backup
@@ -443,18 +460,6 @@ When importing for domain users:
 5. Test user login
 6. If working, delete john.corrupt folder
 7. If issues, rename back and investigate
-
----
-
-## Keyboard Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+L` | Clear log viewer |
-| `Ctrl+F` | Focus search box |
-| `Ctrl+C` | Copy selected log text |
-| `Escape` | Cancel current operation |
-| `F5` | Refresh user list |
 
 ---
 

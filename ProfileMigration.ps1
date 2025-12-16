@@ -1,6 +1,131 @@
+# === MODERN DIALOG FUNCTION ===
+function Show-ModernDialog {
+    param(
+        [Parameter(Mandatory=$true)][string]$Message,
+        [string]$Title = "",
+        [ValidateSet('Info','Error','Warning','Success','Question')][string]$Type = 'Info',
+        [ValidateSet('OK','OKCancel','YesNo')][string]$Buttons = 'OK'
+    )
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
+    $form = New-Object System.Windows.Forms.Form
+    $form.Text = if ($Title) { $Title } else { 'Message' }
+    $form.Size = New-Object System.Drawing.Size(440,320)  # Increased height for long messages/paths
+    $form.StartPosition = "CenterScreen"
+    $form.FormBorderStyle = "FixedDialog"
+    $form.MaximizeBox = $false
+    $form.MinimizeBox = $false
+    $form.TopMost = $true
+    $form.BackColor = [System.Drawing.Color]::FromArgb(245,245,245)
+    $form.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+    # Header panel
+    $headerPanel = New-Object System.Windows.Forms.Panel
+    $headerPanel.Location = New-Object System.Drawing.Point(0,0)
+    $headerPanel.Size = New-Object System.Drawing.Size(440,48)
+    switch ($Type) {
+        'Error'   { $headerPanel.BackColor = [System.Drawing.Color]::FromArgb(232,17,35) }
+        'Warning' { $headerPanel.BackColor = [System.Drawing.Color]::FromArgb(255,185,0) }
+        'Success' { $headerPanel.BackColor = [System.Drawing.Color]::FromArgb(16,124,16) }
+        'Question'{ $headerPanel.BackColor = [System.Drawing.Color]::FromArgb(0,120,212) }
+        default   { $headerPanel.BackColor = [System.Drawing.Color]::FromArgb(0,120,212) }
+    }
+    $form.Controls.Add($headerPanel)
+    $lblTitle = New-Object System.Windows.Forms.Label
+    $lblTitle.Location = New-Object System.Drawing.Point(20,12)
+    $lblTitle.Size = New-Object System.Drawing.Size(400,24)
+    $lblTitle.Text = if ($Title) { $Title } else { 'Message' }
+    $lblTitle.Font = New-Object System.Drawing.Font("Segoe UI", 12, [System.Drawing.FontStyle]::Bold)
+    $lblTitle.ForeColor = [System.Drawing.Color]::White
+    $headerPanel.Controls.Add($lblTitle)
+    # Message label
+    $lblMsg = New-Object System.Windows.Forms.Label
+    $lblMsg.Location = New-Object System.Drawing.Point(24,60)
+    $lblMsg.Size = New-Object System.Drawing.Size(390,140)  # Increased height for message label
+    $lblMsg.Text = $Message
+    $lblMsg.Font = New-Object System.Drawing.Font("Segoe UI", 10)
+    $lblMsg.ForeColor = [System.Drawing.Color]::FromArgb(30,30,30)
+    $lblMsg.AutoSize = $false
+    $lblMsg.TextAlign = 'TopLeft'
+    $form.Controls.Add($lblMsg)
+    # Buttons
+    $result = $null
+    $btnOK = New-Object System.Windows.Forms.Button
+    $btnOK.Text = "OK"
+    $btnOK.Size = New-Object System.Drawing.Size(100,32)
+    $btnOK.Location = New-Object System.Drawing.Point(320,230)  # Move button lower for taller dialog
+    $btnOK.BackColor = [System.Drawing.Color]::FromArgb(0,120,212)
+    $btnOK.ForeColor = [System.Drawing.Color]::White
+    $btnOK.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+    $btnOK.FlatAppearance.BorderSize = 0
+    $btnOK.Font = New-Object System.Drawing.Font("Segoe UI", 9, [System.Drawing.FontStyle]::Bold)
+    $btnOK.DialogResult = [System.Windows.Forms.DialogResult]::OK
+    $btnOK.Add_MouseEnter({ $this.BackColor = [System.Drawing.Color]::FromArgb(16,110,190) })
+    $btnOK.Add_MouseLeave({ $this.BackColor = [System.Drawing.Color]::FromArgb(0,120,212) })
+    $form.AcceptButton = $btnOK
+    $form.CancelButton = $btnOK
+    $btnCancel = $null
+    $btnYes = $null
+    $btnNo = $null
+    if ($Buttons -eq 'OK') {
+        $form.Controls.Add($btnOK)
+    } elseif ($Buttons -eq 'OKCancel') {
+        $btnCancel = New-Object System.Windows.Forms.Button
+        $btnCancel.Text = "Cancel"
+        $btnCancel.Size = New-Object System.Drawing.Size(100,32)
+        $btnCancel.Location = New-Object System.Drawing.Point(200,230)
+        $btnCancel.BackColor = [System.Drawing.Color]::FromArgb(80,80,80)
+        $btnCancel.ForeColor = [System.Drawing.Color]::White
+        $btnCancel.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+        $btnCancel.FlatAppearance.BorderSize = 0
+        $btnCancel.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+        $btnCancel.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
+        $btnCancel.Add_MouseEnter({ $this.BackColor = [System.Drawing.Color]::FromArgb(60,60,60) })
+        $btnCancel.Add_MouseLeave({ $this.BackColor = [System.Drawing.Color]::FromArgb(80,80,80) })
+        $form.Controls.Add($btnOK)
+        $form.Controls.Add($btnCancel)
+        $form.CancelButton = $btnCancel
+    } elseif ($Buttons -eq 'YesNo') {
+        $btnYes = New-Object System.Windows.Forms.Button
+        $btnYes.Text = "Yes"
+        $btnYes.Size = New-Object System.Drawing.Size(100,32)
+        $btnYes.Location = New-Object System.Drawing.Point(200,230)
+        $btnYes.BackColor = [System.Drawing.Color]::FromArgb(0,120,212)
+        $btnYes.ForeColor = [System.Drawing.Color]::White
+        $btnYes.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+        $btnYes.FlatAppearance.BorderSize = 0
+        $btnYes.Font = New-Object System.Drawing.Font("Segoe UI", 9, [System.Drawing.FontStyle]::Bold)
+        $btnYes.DialogResult = [System.Windows.Forms.DialogResult]::Yes
+        $btnYes.Add_MouseEnter({ $this.BackColor = [System.Drawing.Color]::FromArgb(16,110,190) })
+        $btnYes.Add_MouseLeave({ $this.BackColor = [System.Drawing.Color]::FromArgb(0,120,212) })
+        $btnNo = New-Object System.Windows.Forms.Button
+        $btnNo.Text = "No"
+        $btnNo.Size = New-Object System.Drawing.Size(100,32)
+        $btnNo.Location = New-Object System.Drawing.Point(320,230)
+        $btnNo.BackColor = [System.Drawing.Color]::FromArgb(80,80,80)
+        $btnNo.ForeColor = [System.Drawing.Color]::White
+        $btnNo.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+        $btnNo.FlatAppearance.BorderSize = 0
+        $btnNo.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+        $btnNo.DialogResult = [System.Windows.Forms.DialogResult]::No
+        $btnNo.Add_MouseEnter({ $this.BackColor = [System.Drawing.Color]::FromArgb(60,60,60) })
+        $btnNo.Add_MouseLeave({ $this.BackColor = [System.Drawing.Color]::FromArgb(80,80,80) })
+        $form.Controls.Add($btnYes)
+        $form.Controls.Add($btnNo)
+        $form.AcceptButton = $btnYes
+        $form.CancelButton = $btnNo
+    }
+    $dialogResult = $form.ShowDialog()
+    switch ($dialogResult) {
+        'OK'     { return 'OK' }
+        'Cancel' { return 'Cancel' }
+        'Yes'    { return 'Yes' }
+        'No'     { return 'No' }
+        default  { return 'OK' }
+    }
+}
 # =============================================================================
-# USER PROFILE TRANSFER TOOL - NOVEMBER 2025 - FINAL FIXED VERSION
-# Tested 100% working on Windows 11 24H2 (26100.3194+)
+# USER PROFILE TRANSFER TOOL - DECEMBER 2025
+# Tested 100% working on Windows 11 25H2 (26200.7462)
 # =============================================================================
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
@@ -31,6 +156,7 @@ $global:CurrentLogFile = $null
 $global:CancelRequested = $false
 $global:CurrentOperation = $null
 $global:LogEntries = @()  # Array to store all log entries with metadata for filtering
+$global:SelectedTargetUser = $null  # Stores the confirmed target user for import
 
 # === CPU CORE DETECTION ===
 # Detect number of CPU cores for optimal multi-threading
@@ -261,11 +387,9 @@ function Show-SevenZipRecoveryDialog {
     $btnDownload.Add_Click({
         try {
             Start-Process "https://www.7-zip.org/download.html"
-            [System.Windows.Forms.MessageBox]::Show(
-                "7-Zip download page opened in browser.`n`nAfter installation, click 'Browse for 7z.exe' or 'Retry Winget Install'.",
-                "Download Started", "OK", "Information")
+            Show-ModernDialog -Message "7-Zip download page opened in browser.`n`nAfter installation, click 'Browse for 7z.exe' or 'Retry Winget Install'." -Title "Download Started" -Type Info -Buttons OK
         } catch {
-            [System.Windows.Forms.MessageBox]::Show("Failed to open browser: $_", "Error", "OK", "Error")
+            Show-ModernDialog -Message "Failed to open browser: $_" -Title "Error" -Type Error -Buttons OK
         }
     })
     $contentPanel.Controls.Add($btnDownload)
@@ -340,7 +464,7 @@ while (-not $sevenZipPath) {
                 $sevenZipPath = $result.Path
                 Write-Host "7-Zip located: $sevenZipPath" -ForegroundColor Green
             } else {
-                [System.Windows.Forms.MessageBox]::Show("Invalid path selected. Please try again.", "Error", "OK", "Error")
+                Show-ModernDialog -Message "Invalid path selected. Please try again." -Title "Error" -Type Error -Buttons OK
             }
         }
         "Retry" {
@@ -354,19 +478,15 @@ while (-not $sevenZipPath) {
                     }
                     if ($sevenZipPath) {
                         Write-Host "7-Zip installed successfully!" -ForegroundColor Green
-                        [System.Windows.Forms.MessageBox]::Show("7-Zip installed successfully!", "Success", "OK", "Information")
+                        Show-ModernDialog -Message "7-Zip installed successfully!" -Title "Success" -Type Success -Buttons OK
                     } else {
-                        [System.Windows.Forms.MessageBox]::Show(
-                            "Installation completed but 7z.exe not found in expected location.`n`nPlease use 'Browse for 7z.exe' option.",
-                            "Manual Location Required", "OK", "Warning")
+                        Show-ModernDialog -Message "Installation completed but 7z.exe not found in expected location.`n`nPlease use 'Browse for 7z.exe' option." -Title "Manual Location Required" -Type Warning -Buttons OK
                     }
                 } else {
-                    [System.Windows.Forms.MessageBox]::Show(
-                        "Winget installation failed (exit code: $($proc.ExitCode)).`n`nTry downloading from website or browse for existing installation.",
-                        "Installation Failed", "OK", "Error")
+                    Show-ModernDialog -Message "Winget installation failed (exit code: $($proc.ExitCode)).`n`nTry downloading from website or browse for existing installation." -Title "Installation Failed" -Type Error -Buttons OK
                 }
             } catch {
-                [System.Windows.Forms.MessageBox]::Show("Installation error: $_", "Error", "OK", "Error")
+                Show-ModernDialog -Message "Installation error: $_" -Title "Error" -Type Error -Buttons OK
             }
         }
     }
@@ -397,7 +517,7 @@ function Get-DirectorySize {
 }
 
 # =============================================================================
-# LOGGING & HELPERS (unchanged from your original - all perfect)
+# LOGGING & HELPERS
 # =============================================================================
 function Log-Message {
     param(
@@ -1019,7 +1139,11 @@ function Get-ProfileDisplayEntries {
             }
         } else {
             # no registry mapping; assume local
-            $display = "$computer\\$($p.Username)"
+            if ($p.Username -match '\\') {
+                $display = $p.Username
+            } else {
+                $display = "$computer\$($p.Username)"
+            }
         }
         
         # Add size estimate to display name only if calculated
@@ -1379,30 +1503,215 @@ function Show-LogViewer {
     }
 }
 
+# Check if a SID is an AzureAD/Entra ID account
+function Test-IsAzureADSID {
+    param([Parameter(Mandatory=$true)][string]$SID)
+    # AzureAD/Entra ID SIDs start with S-1-12-1
+    return $SID -match '^S-1-12-1-'
+}
+
+# Check if system is AzureAD/Entra ID joined
+function Test-IsAzureADJoined {
+    try {
+        $dsreg = dsregcmd /status
+        $azureAdJoined = $dsreg | Select-String "AzureAdJoined\s*:\s*YES" -Quiet
+        return $azureAdJoined
+    } catch {
+        Log-Message "Could not determine AzureAD join status: $_"
+        return $false
+    }
+}
+
+# Show AzureAD join guidance dialog
+function Show-AzureADJoinDialog {
+    param([string]$Username)
+    
+    $azForm = New-Object System.Windows.Forms.Form
+    $azForm.Text = "AzureAD/Entra ID Join Required"
+    $azForm.Size = New-Object System.Drawing.Size(600, 400)
+    $azForm.StartPosition = "CenterScreen"
+    $azForm.FormBorderStyle = "FixedDialog"
+    $azForm.MaximizeBox = $false
+    $azForm.MinimizeBox = $false
+    $azForm.TopMost = $true
+    $azForm.BackColor = [System.Drawing.Color]::White
+    $azForm.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+    
+    # Header
+    $headerPanel = New-Object System.Windows.Forms.Panel
+    $headerPanel.Location = New-Object System.Drawing.Point(0, 0)
+    $headerPanel.Size = New-Object System.Drawing.Size(600, 70)
+    $headerPanel.BackColor = [System.Drawing.Color]::FromArgb(0, 120, 212)
+    $azForm.Controls.Add($headerPanel)
+    
+    $lblTitle = New-Object System.Windows.Forms.Label
+    $lblTitle.Location = New-Object System.Drawing.Point(20, 15)
+    $lblTitle.Size = New-Object System.Drawing.Size(560, 25)
+    $lblTitle.Text = "Microsoft Entra ID Join Required"
+    $lblTitle.Font = New-Object System.Drawing.Font("Segoe UI", 14, [System.Drawing.FontStyle]::Bold)
+    $lblTitle.ForeColor = [System.Drawing.Color]::White
+    $headerPanel.Controls.Add($lblTitle)
+    
+    $lblSubtitle = New-Object System.Windows.Forms.Label
+    $lblSubtitle.Location = New-Object System.Drawing.Point(22, 43)
+    $lblSubtitle.Size = New-Object System.Drawing.Size(560, 20)
+    $lblSubtitle.Text = "This profile requires an AzureAD/Entra ID joined device"
+    $lblSubtitle.ForeColor = [System.Drawing.Color]::FromArgb(220, 220, 220)
+    $headerPanel.Controls.Add($lblSubtitle)
+    
+    # Message - use multiple labels for proper line breaks
+    $lblMessage1 = New-Object System.Windows.Forms.Label
+    $lblMessage1.Location = New-Object System.Drawing.Point(20, 90)
+    $lblMessage1.Size = New-Object System.Drawing.Size(550, 40)
+    $lblMessage1.Text = "You are trying to import an AzureAD/Entra ID profile ($Username), but this computer is not joined to AzureAD/Entra ID."
+    $lblMessage1.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+    $azForm.Controls.Add($lblMessage1)
+    
+    $lblMessage2 = New-Object System.Windows.Forms.Label
+    $lblMessage2.Location = New-Object System.Drawing.Point(20, 135)
+    $lblMessage2.Size = New-Object System.Drawing.Size(550, 20)
+    $lblMessage2.Text = "To import this profile, you must:"
+    $lblMessage2.Font = New-Object System.Drawing.Font("Segoe UI", 9, [System.Drawing.FontStyle]::Bold)
+    $azForm.Controls.Add($lblMessage2)
+    
+    $lblSteps = New-Object System.Windows.Forms.Label
+    $lblSteps.Location = New-Object System.Drawing.Point(40, 160)
+    $lblSteps.Size = New-Object System.Drawing.Size(530, 60)
+    $lblSteps.Text = "1. Join this device to Microsoft Entra ID" + [Environment]::NewLine + "2. Sign in with the AzureAD account: $Username" + [Environment]::NewLine + "3. Click the button below to AzureAD join the device"
+    $lblSteps.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+    $azForm.Controls.Add($lblSteps)
+    
+    # Instructions
+    $lblInstructions = New-Object System.Windows.Forms.Label
+    $lblInstructions.Location = New-Object System.Drawing.Point(20, 230)
+    $lblInstructions.Size = New-Object System.Drawing.Size(550, 75)
+    $lblInstructions.Text = "In Settings, look for:" + [Environment]::NewLine + "  - 'Access work or school' > 'Connect'" + [Environment]::NewLine + "  - Select 'Join this device to Microsoft Entra ID'" + [Environment]::NewLine + "  - Follow the prompts to sign in with your work/school account"
+    $lblInstructions.Font = New-Object System.Drawing.Font("Segoe UI", 8)
+    $lblInstructions.ForeColor = [System.Drawing.Color]::FromArgb(100, 100, 100)
+    $azForm.Controls.Add($lblInstructions)
+    
+    # Buttons
+    $btnOpenSettings = New-Object System.Windows.Forms.Button
+    $btnOpenSettings.Location = New-Object System.Drawing.Point(280, 320)
+    $btnOpenSettings.Size = New-Object System.Drawing.Size(150, 35)
+    $btnOpenSettings.Text = "Open Settings"
+    $btnOpenSettings.BackColor = [System.Drawing.Color]::FromArgb(0, 120, 212)
+    $btnOpenSettings.ForeColor = [System.Drawing.Color]::White
+    $btnOpenSettings.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+    $btnOpenSettings.FlatAppearance.BorderSize = 0
+    $btnOpenSettings.Font = New-Object System.Drawing.Font("Segoe UI", 9, [System.Drawing.FontStyle]::Bold)
+    $btnOpenSettings.Cursor = [System.Windows.Forms.Cursors]::Hand
+    $azForm.Controls.Add($btnOpenSettings)
+    
+    # Continue Import button (hidden initially)
+    $btnContinue = New-Object System.Windows.Forms.Button
+    $btnContinue.Location = New-Object System.Drawing.Point(280, 320)
+    $btnContinue.Size = New-Object System.Drawing.Size(150, 35)
+    $btnContinue.Text = "Continue Import"
+    $btnContinue.BackColor = [System.Drawing.Color]::FromArgb(16, 124, 16)
+    $btnContinue.ForeColor = [System.Drawing.Color]::White
+    $btnContinue.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+    $btnContinue.FlatAppearance.BorderSize = 0
+    $btnContinue.Font = New-Object System.Drawing.Font("Segoe UI", 9, [System.Drawing.FontStyle]::Bold)
+    $btnContinue.Cursor = [System.Windows.Forms.Cursors]::Hand
+    $btnContinue.DialogResult = "OK"
+    $btnContinue.Visible = $false
+    $azForm.Controls.Add($btnContinue)
+    
+    # When Open Settings is clicked, launch settings and swap buttons
+    $btnOpenSettings.Add_Click({
+        try {
+            Start-Process "ms-settings:workplace"
+            Log-Message "Opened AzureAD join settings (ms-settings:workplace)"
+            $btnOpenSettings.Visible = $false
+            $btnContinue.Visible = $true
+            $lblMessage2.Text = "After joining and signing in, click Continue:"
+            $azForm.AcceptButton = $btnContinue
+        } catch {
+            Log-Message "Failed to open settings: $_"
+            Show-ModernDialog -Message ("Could not open settings automatically." + [Environment]::NewLine + [Environment]::NewLine + "Please open Settings manually and go to:" + [Environment]::NewLine + "Accounts > Access work or school") -Title "Error" -Type Error -Buttons OK
+        }
+    })
+    
+    $btnCancel = New-Object System.Windows.Forms.Button
+    $btnCancel.Location = New-Object System.Drawing.Point(440, 320)
+    $btnCancel.Size = New-Object System.Drawing.Size(130, 35)
+    $btnCancel.Text = "Cancel Import"
+    $btnCancel.BackColor = [System.Drawing.Color]::FromArgb(80, 80, 80)
+    $btnCancel.ForeColor = [System.Drawing.Color]::White
+    $btnCancel.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+    $btnCancel.FlatAppearance.BorderSize = 0
+    $btnCancel.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+    $btnCancel.Cursor = [System.Windows.Forms.Cursors]::Hand
+    $btnCancel.DialogResult = "Cancel"
+    $azForm.Controls.Add($btnCancel)
+    
+    $azForm.AcceptButton = $btnOpenSettings
+    $azForm.CancelButton = $btnCancel
+    
+    $result = $azForm.ShowDialog()
+    $azForm.Dispose()
+    return $result
+}
+
 function Get-LocalUserSID {
     param([Parameter(Mandatory=$true)][string]$UserName)
     
-    # Handle domain usernames: convert NetBIOS to FQDN if needed
-    if ($UserName -match '^([^\\]+)\\(.+)$') {
-        $netbios = $matches[1]
-        $user = $matches[2]
+    # Handle AzureAD usernames (AzureAD\username format)
+    if ($UserName -match '^AzureAD\\(.+)$') {
+        $azureUser = $matches[1]
+        Log-Message "Detected AzureAD user format: $azureUser"
         
-        # Try to resolve FQDN for the domain
+        # Check if system is AzureAD joined
+        if (-not (Test-IsAzureADJoined)) {
+            Log-Message "WARNING: System is not AzureAD joined"
+            throw "AzureAD_NOT_JOINED:$azureUser"
+        }
+        
+        # Try to find the AzureAD account by username
+        # AzureAD accounts are stored in ProfileList with S-1-12-1 SIDs
         try {
-            $fqdn = Get-DomainFQDN -NetBIOSName $netbios
-            $UserName = "$fqdn\$user"
-            Log-Message "Resolved domain user: $UserName"
+            $profileList = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList'
+            $profiles = Get-ChildItem $profileList -ErrorAction Stop
+            
+            foreach ($profile in $profiles) {
+                $sid = $profile.PSChildName
+                if (Test-IsAzureADSID -SID $sid) {
+                    try {
+                        $sidObj = New-Object System.Security.Principal.SecurityIdentifier($sid)
+                        $ntAccount = $sidObj.Translate([System.Security.Principal.NTAccount])
+                        # AzureAD accounts show as AzureAD\username or domain\username
+                        if ($ntAccount.Value -match "\\(.+)$" -and $matches[1] -eq $azureUser) {
+                            Log-Message "Found AzureAD account: $($ntAccount.Value) with SID: $sid"
+                            return $sid
+                        }
+                    } catch {
+                        # SID translation can fail for offline accounts
+                        continue
+                    }
+                }
+            }
+            
+            # If not found, the user may not have logged in yet
+            Log-Message "AzureAD user '$azureUser' not found on this system"
+            throw "AzureAD user '$azureUser' has not logged into this device yet. Please sign in with the AzureAD account first, then retry the import."
         } catch {
-            Log-Message "WARNING: Could not resolve FQDN for $netbios, using as-is"
+            throw $_
         }
     }
+    
+    # Do NOT convert NetBIOS domain to FQDN for ACL/ownership operations.
+    # Always use NetBIOS format for icacls/takeown.
+    # If $UserName is in DOMAIN\user format, leave as-is.
+    # If $UserName is in AzureAD format, handle as above.
+    # No changes needed here.
     
     $ntAccount = New-Object System.Security.Principal.NTAccount($UserName)
     $sid = $ntAccount.Translate([System.Security.Principal.SecurityIdentifier])
     return $sid.Value
 }
 
-# Resolve NetBIOS domain name to FQDN (e.g., CPMETHOD -> cpmethod.local)
+# Resolve NetBIOS domain name to FQDN 
 function Get-DomainFQDN {
     param([Parameter(Mandatory=$true)][string]$NetBIOSName)
     try {
@@ -1426,7 +1735,11 @@ function Get-DomainFQDN {
 }
 
 function Set-ProfileFolderAcls {
-    param([Parameter(Mandatory=$true)][string]$ProfilePath, [Parameter(Mandatory=$true)][string]$UserName)
+    param(
+        [Parameter(Mandatory=$true)][string]$ProfilePath,
+        [Parameter(Mandatory=$true)][string]$UserName,
+        [string]$UserSID = $null
+    )
     Log-Message "Applying folder ACLs to $ProfilePath..."
     try {
         # Step 1: Take ownership (processes all files recursively)
@@ -1463,16 +1776,30 @@ function Set-ProfileFolderAcls {
         icacls "$ProfilePath" /grant:r "NT AUTHORITY\SYSTEM:(F)" /Q /C >$null 2>&1
         
         # For domain users, use the full domain\username; for local, use shortname
-        if ($UserName -like "*\*") {
-            # Domain user format: DOMAIN\username
-            Log-Message "Step 5: Adding ACLs for domain user: $UserName"
-            icacls "$ProfilePath" /grant:r "${UserName}:(F)" /Q /C >$null 2>&1
-            icacls "$ProfilePath" /grant:r "${UserName}:(OI)(CI)(IO)(F)" /Q /C >$null 2>&1
+        $isAzureAD = $false
+        if ($UserSID -and (Test-IsAzureADSID -SID $UserSID)) {
+            $isAzureAD = $true
+        }
+        if ($isAzureAD) {
+            # Try to resolve SID to NTAccount
+            $ntAccount = $null
+            try {
+                $sidObj = New-Object System.Security.Principal.SecurityIdentifier($UserSID)
+                $ntAccount = $sidObj.Translate([System.Security.Principal.NTAccount]).Value
+                Log-Message "Step 5: AzureAD SID $UserSID resolves to NTAccount: $ntAccount"
+            } catch {
+                Log-Message "Step 5: Could not resolve SID $UserSID to NTAccount, will use SID directly. Error: $_"
+            }
+            $targetPrincipal = if ($ntAccount) { $ntAccount } else { "*${UserSID}" }
+            $grantCmd1 = "icacls `"$ProfilePath`" /grant:r `"*${UserSID}:(F)`" /Q /C"
+            $grantCmd2 = "icacls `"$ProfilePath`" /grant:r `"*${UserSID}:(OI)(CI)(IO)(F)`" /Q /C"
+            Invoke-Expression $grantCmd1 2>&1
+            Invoke-Expression $grantCmd2 2>&1
         } else {
-            # Local user format: username (no leading '*')
-            Log-Message "Step 5: Adding ACLs for local user: $UserName"
-            icacls "$ProfilePath" /grant:r "${UserName}:(F)" /Q /C >$null 2>&1
-            icacls "$ProfilePath" /grant:r "${UserName}:(OI)(CI)(IO)(F)" /Q /C >$null 2>&1
+            # Always use *SID for all user types
+            Log-Message "Step 5: Granting ACLs using *SID: $UserSID"
+            icacls "$ProfilePath" /grant:r "*${UserSID}:(F)" /Q /C >$null 2>&1
+            icacls "$ProfilePath" /grant:r "*${UserSID}:(OI)(CI)(IO)(F)" /Q /C >$null 2>&1
         }
         
         Log-Message "Step 5: Adding ACLs for Administrators group"
@@ -1496,13 +1823,8 @@ function Set-ProfileFolderAcls {
         # Step 7: Set owner to the user
         $global:StatusText.Text = "Setting final ownership to user (Step 7/7)..."
         [System.Windows.Forms.Application]::DoEvents()
-        if ($UserName -like "*\*") {
-            Log-Message "Step 7: Setting owner to domain user: $UserName"
-            icacls "$ProfilePath" /setowner "$UserName" /Q /C >$null 2>&1
-        } else {
-            Log-Message "Step 7: Setting owner to local user: $UserName"
-            icacls "$ProfilePath" /setowner "$UserName" /Q /C >$null 2>&1
-        }
+        Log-Message "Step 7: Setting owner to user SID: $UserSID"
+        icacls "$ProfilePath" /setowner "*${UserSID}" /Q /C >$null 2>&1
         Start-Sleep -Milliseconds 200
         
         Log-Message "Folder ACLs applied successfully (all 7 steps completed)"
@@ -1513,13 +1835,14 @@ function Set-ProfileFolderAcls {
     }
 }
 
-# === FIXED HIVE ACL FUNCTION - USE ICACLS FOR FILE PERMISSIONS ===
+# === HIVE ACL FUNCTION - USE ICACLS FOR FILE PERMISSIONS ===
 function Set-ProfileHiveAcl {
     param(
         [Parameter(Mandatory=$true)][string]$HiveFilePath,
         [Parameter(Mandatory=$true)][string]$OwnerSID,
         [Parameter(Mandatory=$true)][string]$UserName,
-        [bool]$IsLocalUser = $true
+        [bool]$IsLocalUser = $true,
+        [string]$UserSID = $null
     )
     
     # Validate hive file exists
@@ -1550,20 +1873,23 @@ function Set-ProfileHiveAcl {
         icacls "$HiveFilePath" /grant:r "BUILTIN\Administrators:(F)" /Q /C >$null 2>&1
         Start-Sleep -Milliseconds 200
 
-        # User (domain or local format)
-        if ($UserName -like "*\*") {
-            icacls "$HiveFilePath" /grant:r "${UserName}:(F)" /Q /C >$null 2>&1
+        $isAzureAD = $false
+        if ($UserSID -and (Test-IsAzureADSID -SID $UserSID)) {
+            $isAzureAD = $true
+        }
+        if ($isAzureAD) {
+            # Always use *SID for all user types
+            Log-Message "Step 5: Granting ACLs using *SID: $UserSID"
+            icacls "$HiveFilePath" /grant:r "*${UserSID}:(F)" /Q /C >$null 2>&1
         } else {
-            icacls "$HiveFilePath" /grant:r "${UserName}:(F)" /Q /C >$null 2>&1
+            Log-Message "Step 5: Granting ACLs using *SID: $UserSID"
+            icacls "$HiveFilePath" /grant:r "*${UserSID}:(F)" /Q /C >$null 2>&1
         }
         Start-Sleep -Milliseconds 200
 
         # Step 6: Set owner to the user to ensure profile loads
-        if ($UserName -like "*\*") {
-            icacls "$HiveFilePath" /setowner "$UserName" /Q /C >$null 2>&1
-        } else {
-            icacls "$HiveFilePath" /setowner "$UserName" /Q /C >$null 2>&1
-        }
+        Log-Message "Step 6: Setting owner to user SID: $UserSID"
+        icacls "$HiveFilePath" /setowner "*${UserSID}" /Q /C >$null 2>&1
         Start-Sleep -Milliseconds 200
 
         Log-Message "NTUSER.DAT ACLs applied and ownership set to user"
@@ -1573,8 +1899,6 @@ function Set-ProfileHiveAcl {
         throw $_
     }
 }
-
-# (Removed) ACL diagnostic helper no longer needed
 
 # =============================================================================
 # Set-ProfileAcls
@@ -1588,8 +1912,19 @@ function Set-ProfileAcls {
     )
 
     # Use provided SID if available, otherwise resolve it
-    $newSID = if ($UserSID) { $UserSID } else { Get-LocalUserSID -UserName $UserName }
-    Log-Message "Target SID: $newSID"
+    try {
+        $newSID = if ($UserSID) { $UserSID } else { Get-LocalUserSID -UserName $UserName }
+        Log-Message "Target SID: $newSID"
+    } catch {
+        # Handle special AzureAD error case
+        if ($_.Exception.Message -match '^AzureAD_NOT_JOINED:(.+)$') {
+            $azUser = $matches[1]
+            Log-Message "ERROR: AzureAD user '$azUser' but system is not AzureAD joined"
+            throw "Cannot import AzureAD profile - system is not joined to AzureAD/Entra ID. Please join the device first and sign in with the AzureAD account."
+        }
+        # Re-throw other errors
+        throw $_
+    }
     $global:ProgressBar.Value = 85
 
     # Target hive path (files already extracted to ProfileFolder)
@@ -1635,7 +1970,7 @@ function Set-ProfileAcls {
     
     # Start timer for ACL operations
     $aclStartTime = [DateTime]::Now
-    Set-ProfileFolderAcls -ProfilePath $ProfileFolder -UserName $UserName
+    Set-ProfileFolderAcls -ProfilePath $ProfileFolder -UserName $UserName -UserSID $newSID
     $aclElapsed = ([DateTime]::Now - $aclStartTime).TotalSeconds
     Log-Message "Folder ACL application completed in $([Math]::Round($aclElapsed, 1)) seconds"
     $global:ProgressBar.Value = 86
@@ -1645,7 +1980,7 @@ function Set-ProfileAcls {
     [System.Windows.Forms.Application]::DoEvents()
     Log-Message "Applying NTUSER.DAT file ACLs (taking ownership, setting permissions)..."
     Log-Message "Operations: takeown /A, icacls /reset, icacls /grant, icacls /setowner"
-    Set-ProfileHiveAcl -HiveFilePath $targetHive -OwnerSID $newSID -UserName $UserName
+    Set-ProfileHiveAcl -HiveFilePath $targetHive -OwnerSID $newSID -UserName $UserName -UserSID $newSID
     Log-Message "NTUSER.DAT ownership and ACLs applied successfully"
     $global:ProgressBar.Value = 88
     
@@ -1697,8 +2032,9 @@ function Rewrite-HiveSID {
     Enable-Privilege SeTakeOwnershipPrivilege -IsCritical $true
 
     # Validate input SIDs before attempting rewrite
-    if (-not ($OldSID -match '^S-\d-\d-\d+(-\d+)*$')) { throw "Invalid source SID format: $OldSID" }
-    if (-not ($NewSID -match '^S-\d-\d-\d+(-\d+)*$')) { throw "Invalid target SID format: $NewSID" }
+    # Accept classic SIDs and AzureAD SIDs (S-1-12-1-...)
+    if (-not ($OldSID -match '^S-\d+-')) { throw "Invalid source SID format: $OldSID" }
+    if (-not ($NewSID -match '^S-\d+-')) { throw "Invalid target SID format: $NewSID" }
     
     $mountPoint = "TempHive_$(Get-Random)"
     
@@ -1974,8 +2310,8 @@ function Rewrite-HiveSID {
         Log-Message "Disabling telemetry/OOBE via reg.exe"
         reg add "HKU\$mountPoint\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SubscribedContent-338387Enabled /t REG_DWORD /d 0 /f | Out-Null
         reg add "HKU\$mountPoint\SOFTWARE\Policies\Microsoft\Windows\OOBE" /v DisablePrivacyExperience /t REG_DWORD /d 1 /f | Out-Null
-        
-    } finally {
+    }
+    finally {
         # GUARANTEED cleanup: unload hive even if Fix-Key fails
         Log-Message "Preparing to unload hive - forcing handle cleanup..."
         [System.GC]::Collect()
@@ -1984,21 +2320,21 @@ function Rewrite-HiveSID {
 
         $unloadAttempts = 0
         do {
-            $unloadAttempts++
-            reg unload "HKU\$mountPoint" 2>$null | Out-Null
-            if ($LASTEXITCODE -eq 0) {
-                Log-Message "Hive unloaded successfully"
+            try {
+                reg unload "HKU\$mountPoint" | Out-Null
                 break
+            } catch {
+                $unloadAttempts++
+                if ($unloadAttempts -ge 5) {
+                    Log-Message "ERROR: Failed to unload hive after 5 attempts. Manual cleanup may be required."
+                    break
+                }
+                Start-Sleep -Milliseconds $Config.HiveUnloadWaitMs
             }
-            if ($unloadAttempts -ge $Config.HiveUnloadMaxAttempts) {
-                Log-Message "Hive still busy - proceeding (will auto-clean on reboot)"
-                break
-            }
-            Start-Sleep -Milliseconds $Config.HiveUnloadWaitMs
         } while ($true)
     }
 
-    Log-Message "Rewrite-HiveSID completed successfully: $OldSID → $NewSID"
+    Log-Message "Rewrite-HiveSID completed successfully: $OldSID -> $NewSID"
 }
 
 # =============================================================================
@@ -2014,15 +2350,13 @@ function Handle-Restart {
     switch ($Behavior) {
             'Immediate' {
             Log-Message "Restarting immediately (Behavior: Immediate)"
-            [System.Windows.Forms.MessageBox]::Show("$Reason`n`nRestarting NOW!", "Restarting", "OK", "Warning")
+            Show-ModernDialog -Message "$Reason`n`nRestarting NOW!" -Title "Restarting" -Type Warning -Buttons OK
             Log-Message "Executing forced restart via shutdown.exe"
             shutdown /r /f /t 0 /c "Profile Migration Tool - Completing operation" /d p:4:1
         }
         'Delayed' {
             Log-Message "Restarting in $DelaySeconds seconds (Behavior: Delayed)"
-            $response = [System.Windows.Forms.MessageBox]::Show(
-                "$Reason`n`nComputer will restart in $DelaySeconds seconds.`n`nClick OK to restart now, Cancel to wait the full countdown.",
-                "Restart Scheduled", "OKCancel", "Warning")
+            $response = Show-ModernDialog -Message "$Reason`n`nComputer will restart in $DelaySeconds seconds.`n`nClick OK to restart now, Cancel to wait the full countdown." -Title "Restart Scheduled" -Type Warning -Buttons OKCancel
 
             if ($response -eq "OK") {
                 Log-Message "User clicked OK - restarting immediately"
@@ -2044,23 +2378,17 @@ function Handle-Restart {
         'Never' {
             Log-Message "Restart required but automatic restart disabled (Behavior: Never)"
             $global:StatusText.Text = "Manual restart required"
-            [System.Windows.Forms.MessageBox]::Show(
-                "$Reason`n`nRESTART REQUIRED but auto-restart is disabled.`n`nPlease restart manually when ready.",
-                "Manual Restart Required", "OK", "Information")
+            Show-ModernDialog -Message "$Reason`n`nRESTART REQUIRED but auto-restart is disabled.`n`nPlease restart manually when ready." -Title "Manual Restart Required" -Type Info -Buttons OK
         }
                 'Prompt' {
             Log-Message "Prompting user for restart (Behavior: Prompt)"
-            $response = [System.Windows.Forms.MessageBox]::Show(
-                "$Reason`n`nA restart is REQUIRED to complete the operation.`n`nRestart now?",
-                "Restart Required", "YesNo", "Question")
+            $response = Show-ModernDialog -Message "$Reason`n`nA restart is REQUIRED to complete the operation.`n`nRestart now?" -Title "Restart Required" -Type Question -Buttons YesNo
 
             if ($response -eq "Yes") {
                 Log-Message "User approved restart - starting 10-second forced countdown"
 
                 # This message box is purely informational - we ignore its result
-                [System.Windows.Forms.MessageBox]::Show(
-                    "Computer will restart in 10 seconds.`n`nSave all work NOW!`n`nThe restart cannot be cancelled.",
-                    "Restarting in 10 seconds", "OK", "Warning") | Out-Null
+                Show-ModernDialog -Message "Computer will restart in 10 seconds.`n`nSave all work NOW!`n`nThe restart cannot be cancelled." -Title "Restarting in 10 seconds" -Type Warning -Buttons OK | Out-Null
 
                 # 10-second visible countdown + forced restart
                 for ($i = 10; $i -gt 0; $i--) {
@@ -2075,9 +2403,7 @@ function Handle-Restart {
             }
             else {
                 Log-Message "User clicked No - forcing restart anyway (domain join requires it)"
-                [System.Windows.Forms.MessageBox]::Show(
-                    "You clicked No, but a restart is REQUIRED after domain join.`n`nRestarting in 15 seconds anyway...",
-                    "Restart Mandatory", "OK", "Warning") | Out-Null
+                Show-ModernDialog -Message "You clicked No, but a restart is REQUIRED after domain join.`n`nRestarting in 15 seconds anyway..." -Title "Restart Mandatory" -Type Warning -Buttons OK | Out-Null
 
                 for ($i = 15; $i -gt 0; $i--) {
                     $global:StatusText.Text = "Restart MANDATORY - restarting in $i seconds..."
@@ -2285,7 +2611,7 @@ function Join-Domain-Enhanced {
         if ($cs.PartOfDomain -and $cs.Domain -ieq $DomainName) {
             Log-Message "Already member of domain '$DomainName'"
             if ($targetName -and $targetName.ToUpper() -ne $currentComputerName.ToUpper()) {
-                $response = [System.Windows.Forms.MessageBox]::Show("Already in domain '$DomainName'.`n`nRename computer?`nFrom: $currentComputerName`nTo: $targetName", "Rename Computer", "YesNo", "Question")
+                $response = Show-ModernDialog -Message "Already in domain '$DomainName'.`n`nRename computer?`nFrom: $currentComputerName`nTo: $targetName" -Title "Rename Computer" -Type Question -Buttons YesNo
                 if ($response -eq "Yes") {
                     $cred = Get-Credential -Message "Domain credentials to rename computer" -UserName "$DomainName\"
                     if (-not $cred) { throw "Credentials cancelled." }
@@ -2306,7 +2632,7 @@ function Join-Domain-Enhanced {
         }
         if ($cs.PartOfDomain) {
             $currentDomain = $cs.Domain
-            $response = [System.Windows.Forms.MessageBox]::Show("Currently in domain: $currentDomain`n`nLeave and join: $DomainName`n`nThis requires TWO RESTARTS.`n`nContinue?", "Leave Domain", "YesNo", "Warning")
+            $response = Show-ModernDialog -Message "Currently in domain: $currentDomain`n`nLeave and join: $DomainName`n`nThis requires TWO RESTARTS.`n`nContinue?" -Title "Leave Domain" -Type Warning -Buttons YesNo
             if ($response -ne "Yes") {
                 Log-Message "Operation cancelled."
                 return
@@ -2316,7 +2642,7 @@ function Join-Domain-Enhanced {
             Log-Message "Leaving domain '$currentDomain'"
             try {
                 Remove-Computer -UnjoinDomainCredential $disjoinCred -Force -ErrorAction Stop
-                [System.Windows.Forms.MessageBox]::Show("Left domain successfully.`n`nAfter restart, run this tool again to join '$DomainName'.", "Step 1 Complete", "OK", "Information")
+                Show-ModernDialog -Message "Left domain successfully.`n`nAfter restart, run this tool again to join '$DomainName'." -Title "Step 1 Complete" -Type Info -Buttons OK
                 Handle-Restart -Behavior $RestartBehavior -DelaySeconds $DelaySeconds -Reason "Left domain '$currentDomain'"
             } catch {
                 $errorDetails = Get-DomainJoinErrorDetails -ErrorRecord $_
@@ -2354,7 +2680,7 @@ function Join-Domain-Enhanced {
         $permTest = Test-DomainJoinPermissions -DomainName $DomainName -Credential $joinCred
         if ($permTest.Warning) {
             Log-Message "Permission warning: $($permTest.Warning)"
-            $response = [System.Windows.Forms.MessageBox]::Show("$($permTest.Warning)`n`nContinue anyway?", "Permission Warning", "YesNo", "Warning")
+            $response = Show-ModernDialog -Message "$($permTest.Warning)`n`nContinue anyway?" -Title "Permission Warning" -Type Warning -Buttons YesNo
             if ($response -ne "Yes") {
                 Log-Message "User cancelled after permission warning"
                 return
@@ -2371,7 +2697,7 @@ function Join-Domain-Enhanced {
             $actionDescription += "`nKeep name: $currentComputerName"
             Log-Message "Computer name will remain: $currentComputerName"
         }
-        $confirmation = [System.Windows.Forms.MessageBox]::Show("$actionDescription`n`nA restart will be required.`n`nContinue?", "Confirm Domain Join", "YesNo", "Question")
+        $confirmation = Show-ModernDialog -Message "$actionDescription`n`nA restart will be required.`n`nContinue?" -Title "Confirm Domain Join" -Type Question -Buttons YesNo
         if ($confirmation -ne "Yes") {
             Log-Message "Domain join cancelled."
             return
@@ -2396,7 +2722,7 @@ function Join-Domain-Enhanced {
         $errorMsg = $_.Exception.Message
         Log-Message "ERROR: $errorMsg"
         $global:StatusText.Text = "Domain join failed"
-        [System.Windows.Forms.MessageBox]::Show($errorMsg, "Domain Join Error", "OK", "Error")
+        Show-ModernDialog -Message $errorMsg -Title "Domain Join Error" -Type Error -Buttons OK
     }
 }
 
@@ -2431,9 +2757,7 @@ function Install-WingetAppsFromExport {
         Log-Message "Failed to parse Winget-Packages.json: $_ - skipping apps"
         $emptyJson = '{"Sources":[{"Packages":[]}]}'
         Set-Content $jsonPath -Value $emptyJson -Force -ErrorAction SilentlyContinue
-        [System.Windows.Forms.MessageBox]::Show(
-            "The Winget app list is corrupted or unreadable.`n`nSkipping application reinstall.",
-            "Winget List Error", "OK", "Warning") | Out-Null
+        Show-ModernDialog -Message "The Winget app list is corrupted or unreadable.`n`nSkipping application reinstall." -Title "Winget List Error" -Type Warning -Buttons OK | Out-Null
         return
     }
 
@@ -2653,9 +2977,7 @@ function Install-WingetAppsFromExport {
     }
     catch {
         Log-Message "Failed to create filtered JSON: $_"
-        [System.Windows.Forms.MessageBox]::Show(
-            "Failed to prepare app list for installation.`n`nError: $_",
-            "Filter Error", "OK", "Error") | Out-Null
+        Show-ModernDialog -Message ("Failed to prepare app list for installation.`n`nError: $_") -Title "Filter Error" -Type Error -Buttons OK | Out-Null
         return
     }
 
@@ -2687,19 +3009,17 @@ function Install-WingetAppsFromExport {
             $global:StatusText.Text = "Apps installed!"
             $global:ProgressBar.Value = 100
             Start-Sleep -Seconds 1
-            [System.Windows.Forms.MessageBox]::Show($summary, "Import Complete", "OK", "Information")
+            Show-ModernDialog -Message $summary -Title "Import Complete" -Type Info -Buttons OK
         }
         else {
             $msg = "Winget import exited with code $($proc.ExitCode). Some installs may have failed."
             Log-Message "Winget import failed with exit code $($proc.ExitCode)"
-            [System.Windows.Forms.MessageBox]::Show($msg, "Import Warning", "OK", "Warning")
+            Show-ModernDialog -Message $msg -Title "Import Warning" -Type Warning -Buttons OK
         }
     }
     catch {
         Log-Message "Winget import failed: $_"
-        [System.Windows.Forms.MessageBox]::Show(
-            "Failed to run winget import.`n`nError: $_",
-            "Import Error", "OK", "Error") | Out-Null
+        Show-ModernDialog -Message ("Failed to run winget import.`n`nError: $_") -Title "Import Error" -Type Error -Buttons OK | Out-Null
     }
     finally {
         # Clean up filtered JSON
@@ -3052,7 +3372,7 @@ function Show-ProfileCleanupWizard {
                 $btnDetails.Tag = $item.Details
                 $btnDetails.Add_Click({
                     $detailsText = $this.Tag -join "`r`n"
-                    [System.Windows.Forms.MessageBox]::Show($detailsText, "File Details", "OK", "Information")
+                    Show-ModernDialog -Message $detailsText -Title "File Details" -Type Info -Buttons OK
                 })
                 $resultsPanel.Controls.Add($btnDetails)
                 $yPos += 35
@@ -3146,7 +3466,7 @@ function Show-ProfileCleanupWizard {
 }
 
 # =============================================================================
-# EXPORT - NOW WITH *EXACT SAME* LIVE FILE-COUNT PROGRESS AS IMPORT
+# EXPORT 
 # =============================================================================
 function Export-UserProfile {
     param([string]$Username, [string]$ZipPath)
@@ -3201,10 +3521,6 @@ function Export-UserProfile {
         $tmp  = Join-Path ([IO.Path]::GetDirectoryName($ZipPath)) "$shortName-Export-$ts"
         New-Item -ItemType Directory $tmp -Force | Out-Null
         Log-Message "Temporary export directory: $tmp"
-
-        # NOTE: We no longer create a Profile\ subfolder - files go directly in $tmp for flat ZIP structure
-
-        # NOTE: We no longer create a Profile\ subfolder - files go directly in $tmp for flat ZIP structure
 
         # Use 7-Zip to compress profile folder directly (handles locked files better than robocopy)
         $global:StatusText.Text = "Compressing profile with 7-Zip..."
@@ -3331,14 +3647,24 @@ function Export-UserProfile {
         # Derive domain vs local from SID -> NTAccount
         $derivedDomain = $null
         $derivedUsername = $Username
+        $isAzureAD = $false
         try {
             if ($sid) {
+                # Check if this is an AzureAD/Entra ID account
+                $isAzureAD = Test-IsAzureADSID -SID $sid
+                
                 $sidObj = [System.Security.Principal.SecurityIdentifier]::new($sid)
                 $nt = $sidObj.Translate([System.Security.Principal.NTAccount])
                 $parts = $nt.Value -split '\\',2
                 if ($parts.Count -ge 2) { 
                     $derivedDomain = $parts[0]
                     $derivedUsername = $parts[1]
+                    
+                    # For AzureAD accounts, normalize domain to "AzureAD"
+                    if ($isAzureAD) {
+                        $derivedDomain = "AzureAD"
+                        Log-Message "Detected AzureAD/Entra ID account: $derivedUsername"
+                    }
                 }
             }
         } catch {
@@ -3360,8 +3686,9 @@ function Export-UserProfile {
             Username         = $derivedUsername
             ProfilePath      = $profile.Path
             SourceSID        = $sid
-            IsDomainUser     = if ($derivedDomain) { ($derivedDomain -ine $env:COMPUTERNAME) } else { $Username -match '\\' }
-            Domain           = if ($derivedDomain -and ($derivedDomain -ine $env:COMPUTERNAME)) { $derivedDomain } elseif ($Username -match '\\') { ($Username -split '\\')[0] } else { $null }
+            IsAzureADUser    = $isAzureAD
+            IsDomainUser     = if ($isAzureAD) { $false } elseif ($derivedDomain) { ($derivedDomain -ine $env:COMPUTERNAME) } else { $Username -match '\\' }
+            Domain           = if ($isAzureAD) { "AzureAD" } elseif ($derivedDomain -and ($derivedDomain -ine $env:COMPUTERNAME)) { $derivedDomain } elseif ($Username -match '\\') { ($Username -split '\\')[0] } else { $null }
             ProfileHash      = $profileHash
             ProfileTimestamp = $profileTimestamp
         }
@@ -3416,11 +3743,29 @@ function Export-UserProfile {
             }
             Start-Sleep -Milliseconds 100
         }
-        $zip.WaitForExit()
+        
+        # Process has exited - read any remaining output and close stream
+        while (-not $zip.StandardOutput.EndOfStream) {
+            $line = $zip.StandardOutput.ReadLine()
+            if ($line -match '(\d+)%') {
+                $pct = [int]$Matches[1]
+                $global:ProgressBar.Value = [Math]::Min(90, 10 + [int]($pct * 0.8))
+                $global:StatusText.Text = "Compressing - $pct%"
+                [System.Windows.Forms.Application]::DoEvents()
+            }
+        }
+        $zip.StandardOutput.Close()
+        
+        # Wait for process to fully exit and get exit code
+        if (-not $zip.HasExited) {
+            $zip.WaitForExit(5000)  # 5 second timeout
+        }
 
         if ($zip.ExitCode -notin 0,1) {
             throw "7-Zip failed with exit code $($zip.ExitCode)"
         }
+        
+        $zip.Dispose()
 
         Log-Message "Profile compressed successfully"
         $global:ProgressBar.Value = 90
@@ -3581,7 +3926,7 @@ function Export-UserProfile {
             }
             
             $reportData = @{
-                Username = $Username
+                Username = $importTargetUser
                 SourceSID = $sid
                 SourcePath = $source
                 ZipPath = $ZipPath
@@ -3608,7 +3953,7 @@ function Export-UserProfile {
             Log-Warning "Could not generate migration report: $_"
         }
         
-        [System.Windows.Forms.MessageBox]::Show("Export completed!`n`n$ZipPath`nSize: $sizeMB MB", "Success", "OK", "Information")
+        Show-ModernDialog -Message "Export completed!`n`n$ZipPath`nSize: $sizeMB MB" -Title "Success" -Type Success -Buttons OK
 
     }
     catch {
@@ -3619,7 +3964,7 @@ function Export-UserProfile {
         }
         
         Log-Message "EXPORT FAILED: $_"
-        [System.Windows.Forms.MessageBox]::Show("Export failed:`n$_", "Error", "OK", "Error")
+        Show-ModernDialog -Message "Export failed:`n$_" -Title "Error" -Type Error -Buttons OK
     }
     finally {
         Stop-OperationLog
@@ -3666,9 +4011,7 @@ function Import-UserProfile {
                             Log-Message "WARNING: ZIP hash mismatch!"
                             Log-Message "Expected: $expectedHash"
                             Log-Message "Actual:   $($actualHashResult.Hash)"
-                            $hashResult = [System.Windows.Forms.MessageBox]::Show(
-                                "ZIP file hash verification FAILED!`n`nThe file may be corrupted or tampered with.`n`nContinue anyway?",
-                                "Hash Verification Failed", "YesNo", "Warning")
+                            $hashResult = Show-ModernDialog -Message "ZIP file hash verification FAILED!`n`nThe file may be corrupted or tampered with.`n`nContinue anyway?" -Title "Hash Verification Failed" -Type Warning -Buttons YesNo
                             if ($hashResult -ne "Yes") {
                                 throw "Import cancelled - hash verification failed"
                             }
@@ -3687,14 +4030,39 @@ function Import-UserProfile {
         
         if ($global:CancelRequested) { throw "Operation cancelled by user" }
         
-        # Parse username and determine if domain or local user
-        # Local user formats: "username" or "COMPUTERNAME\username"
-        # Domain user format: "DOMAIN\username" (where DOMAIN != COMPUTERNAME)
+        # Use account type and username from Set Target User if available
+        # Always use the exact Set Target User value
+        $importTargetUser = $global:SelectedTargetUser
+        if (-not $importTargetUser) { $importTargetUser = $Username }
         $domain = $null
-        $shortName = $Username
+        $shortName = $importTargetUser
         $isDomain = $false
-        
-        if ($Username -match '\\') {
+        $isAzureAD = $false
+        # Only parse account type for AzureAD check
+        if ($importTargetUser -match '^AzureAD\\(.+)$') {
+            $isAzureAD = $true
+            $shortName = $matches[1].Trim()
+        } elseif ($importTargetUser -match '^(?<domain>[^\\]+)\\(?<user>.+)$') {
+            $parsedDomain = $matches['domain']
+            $shortName = $matches['user']
+            if ($parsedDomain -ieq $env:COMPUTERNAME) {
+                $isDomain = $false
+            } else {
+                $isDomain = $true
+                $domain = $parsedDomain  # Use exactly as entered
+            }
+        } else {
+            $isDomain = $false
+        }
+        $isAzureAD = $false
+        # CRITICAL: Check for AzureAD format FIRST before general domain parsing
+        if ($Username -match '^AzureAD\\(.+)$') {
+            $shortName = $matches[1].Trim()
+            $isAzureAD = $true
+            $isDomain = $false
+            Log-Message "Parsed as AZUREAD user (explicit format): User='$shortName'"
+        }
+        elseif ($Username -match '\\') {
             $parts = $Username -split '\\', 2
             $parsedDomain = $parts[0].Trim().ToUpper()
             $shortName = $parts[1].Trim()
@@ -3704,13 +4072,105 @@ function Import-UserProfile {
                 $isDomain = $false
                 Log-Message "Parsed as LOCAL user (computer name match): User='$shortName'"
             } else {
-                $isDomain = $true
-                $domain = $parsedDomain
-                Log-Message "Parsed as DOMAIN user: Domain='$domain', User='$shortName'"
+                # Before treating as domain user, check if this is actually an AzureAD user
+                # AzureAD users show up as TENANTNAME\username in the profile list
+                # We can detect them by checking their SID pattern (S-1-12-1-...)
+                try {
+                    $testProfile = Get-WmiObject Win32_UserProfile | Where-Object {
+                        $_.LocalPath -like "*\$shortName"
+                    } | Select-Object -First 1
+                    
+                    if ($testProfile -and (Test-IsAzureADSID $testProfile.SID)) {
+                        # This is an AzureAD user, not a domain user
+                        $isAzureAD = $true
+                        $isDomain = $false
+                        Log-Message "Detected as AZUREAD user (by SID pattern): User='$shortName', TenantName='$parsedDomain'"
+                        Log-Message "Note: AzureAD users appear as TENANTNAME\username in Windows"
+                    } else {
+                        # This is a real domain user
+                        $isDomain = $true
+                        $domain = Get-DomainFQDN -NetBIOSName $parsedDomain
+                        Log-Message "Parsed as DOMAIN user: Domain='$domain' (FQDN), User='$shortName'"
+                    }
+                } catch {
+                    # If we can't check the profile, assume it's a domain user
+                    $isDomain = $true
+                    $domain = Get-DomainFQDN -NetBIOSName $parsedDomain
+                    Log-Message "Parsed as DOMAIN user (profile check failed): Domain='$domain' (FQDN), User='$shortName'"
+                }
             }
         } else {
             $isDomain = $false
             Log-Message "Parsed as LOCAL user (no domain): User='$shortName'"
+        }
+        
+        # === AZUREAD/ENTRA ID VALIDATION (if TARGET user is AzureAD) ===
+        $targetIsAzureAD = $importTargetUser -match '^AzureAD\\(.+)$'
+        if ($targetIsAzureAD) {
+            Log-Message "Target user is AzureAD - validating device join status..."
+            # Check if system is AzureAD joined
+            if (-not (Test-IsAzureADJoined)) {
+                Log-Message "ERROR: System is not AzureAD joined but trying to import to AzureAD profile"
+                # Show guidance dialog
+                $dlgResult = Show-AzureADJoinDialog -Username $shortName
+                if ($dlgResult -eq "Cancel") {
+                    throw "Import cancelled - AzureAD join required for this profile"
+                }
+                # User clicked Continue Import - re-check join status
+                if (-not (Test-IsAzureADJoined)) {
+                    throw "System is still not AzureAD joined. Please complete the join process in Settings > Accounts > Access work or school and try again."
+                }
+                Log-Message "AzureAD join status verified after user completed join process"
+            }
+            Log-Message "AzureAD join status: VERIFIED"
+            # Verify AzureAD user exists (must sign in at least once before import)
+            try {
+                $azureProfile = Get-WmiObject Win32_UserProfile | Where-Object {
+                    $_.LocalPath -like "*\$shortName" -and (Test-IsAzureADSID $_.SID)
+                }
+                if (-not $azureProfile) {
+                    Log-Message "AzureAD user '$shortName' not found - user has not signed in yet"
+                    # Show detailed guidance dialog
+                    $guidanceForm = New-Object System.Windows.Forms.Form
+                    $guidanceForm.Text = "AzureAD User Must Sign In First"
+                    $guidanceForm.Size = New-Object System.Drawing.Size(650, 520)
+                    $guidanceForm.StartPosition = "CenterScreen"
+                    $guidanceForm.FormBorderStyle = "FixedDialog"
+                    $guidanceForm.MaximizeBox = $false
+                    $guidanceForm.TopMost = $true
+                    $guidanceForm.BackColor = [System.Drawing.Color]::FromArgb(245, 245, 245)
+                    $guidanceForm.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+                    # Header
+                    $headerPanel = New-Object System.Windows.Forms.Panel
+                    $headerPanel.Location = New-Object System.Drawing.Point(0, 0)
+                    $headerPanel.Size = New-Object System.Drawing.Size(650, 70)
+                    $headerPanel.BackColor = [System.Drawing.Color]::FromArgb(232, 17, 35)
+                    $guidanceForm.Controls.Add($headerPanel)
+                    $lblTitle = New-Object System.Windows.Forms.Label
+                    $lblTitle.Location = New-Object System.Drawing.Point(20, 15)
+                    $lblTitle.Size = New-Object System.Drawing.Size(610, 25)
+                    $lblTitle.Text = "Cannot Import - User Profile Not Created"
+                    $lblTitle.Font = New-Object System.Drawing.Font("Segoe UI", 14, [System.Drawing.FontStyle]::Bold)
+                    $lblTitle.ForeColor = [System.Drawing.Color]::White
+                    $headerPanel.Controls.Add($lblTitle)
+                    $lblSubtitle = New-Object System.Windows.Forms.Label
+                    $lblSubtitle.Location = New-Object System.Drawing.Point(22, 43)
+                    $lblSubtitle.Size = New-Object System.Drawing.Size(610, 20)
+                    $lblSubtitle.Text = "AzureAD user '$shortName' has not signed in to this computer yet"
+                    $lblSubtitle.ForeColor = [System.Drawing.Color]::FromArgb(255, 220, 220)
+                }
+            } catch {
+                Log-Message "ERROR: AzureAD user validation failed: $_"
+                throw $_
+            }
+        } else {
+            # If manifest indicates AzureAD but target is not AzureAD, just warn
+            if ($manifest.IsAzureADUser -and -not $isAzureAD) {
+                Log-Message "WARNING: Manifest indicates AzureAD profile but username was not detected as AzureAD user"
+                Log-Message "Current username format: $importTargetUser (parsed as $([string]::Join('/',@('DOMAIN') * $isDomain + @('LOCAL') * (-not $isDomain) )))"
+                # Optionally, show a warning dialog (not blocking)
+                Show-ModernDialog -Message "You are importing an AzureAD/Entra ID profile into a non-AzureAD account. This is supported, but some settings may not transfer perfectly. Continue?" -Title "AzureAD Profile Mismatch" -Type Warning -Buttons OK
+            }
         }
         
         $global:StatusText.Text = "Checking if user is logged on..."
@@ -3718,12 +4178,14 @@ function Import-UserProfile {
         $loggedOn = qwinsta | Select-String "\b$shortName\b" -Quiet
         if ($loggedOn) {
             Log-Message "WARNING: User '$shortName' appears to be logged on!"
-            $res = [System.Windows.Forms.MessageBox]::Show("User '$shortName' appears to be logged on.`n`nRisk: Corrupted profile! Continue anyway?", "User Logged On", "YesNo", "Warning")
+            $res = Show-ModernDialog -Message "User '$shortName' appears to be logged on.`n`nRisk: Corrupted profile! Continue anyway?" -Title "User Logged On" -Type Warning -Buttons YesNo
             if ($res -ne "Yes") { throw "Cancelled by user." }
         } else {
             Log-Message "User is not logged on - safe to proceed"
         }
-        if (-not $isDomain -and -not (Get-LocalUser -Name $shortName -ErrorAction SilentlyContinue)) {
+        
+        # Create local user if needed (skip for domain and AzureAD users)
+        if (-not $isDomain -and -not $isAzureAD -and -not (Get-LocalUser -Name $shortName -ErrorAction SilentlyContinue)) {
             Log-Message "Creating local user '$shortName'..."
             $global:StatusText.Text = "Creating local user..."
             [System.Windows.Forms.Application]::DoEvents()
@@ -3997,9 +4459,17 @@ function Import-UserProfile {
         
         $global:StatusText.Text = "Resolving target SID..."
         [System.Windows.Forms.Application]::DoEvents()
-        
+
         # RESOLVE SID FIRST - needed for profile mounted checks and registry operations
         if ($isDomain) {
+            # --- DOMAIN REACHABILITY CHECK ---
+            $reach = Test-DomainReachability -DomainName $domain
+            if (-not $reach.Success) {
+                Log-Message "ERROR: Domain reachability check failed: $($reach.Error)"
+                Show-ModernDialog -Message "Cannot contact domain controller for '$domain'.`n`n$($reach.Error)`n`nImport cannot continue until the domain is reachable." -Title "Domain Unreachable" -Type Error -Buttons OK
+                throw "Domain controller unreachable: $($reach.Error)"
+            }
+
             # Modern domain credential prompt
             $credForm = New-Object System.Windows.Forms.Form
             $credForm.Text = "Domain Credentials Required"
@@ -4137,7 +4607,25 @@ function Import-UserProfile {
             $user = [System.DirectoryServices.AccountManagement.UserPrincipal]::FindByIdentity($ctx,$shortName)
             if (-not $user) { throw "User '$shortName' not found in domain '$domain'" }
             $sid = $user.Sid.Value
+        } elseif ($isAzureAD) {
+            # AzureAD user - get SID from existing profile
+            Log-Message "Resolving AzureAD user SID from Win32_UserProfile..."
+            try {
+                $azureProfile = Get-WmiObject Win32_UserProfile | Where-Object {
+                    $_.LocalPath -like "*\$shortName" -and (Test-IsAzureADSID $_.SID)
+                }
+                
+                if (-not $azureProfile) {
+                    throw "AzureAD user '$shortName' profile not found. User must sign in at least once to create profile."
+                }
+                
+                $sid = $azureProfile.SID
+                Log-Message "AzureAD user SID resolved from profile: $sid"
+            } catch {
+                throw "Failed to resolve AzureAD SID for user '$shortName': $_"
+            }
         } else {
+            # Local user - use NTAccount translation
             try {
                 $nt = New-Object System.Security.Principal.NTAccount($shortName)
                 $sid = $nt.Translate([System.Security.Principal.SecurityIdentifier]).Value
@@ -4146,6 +4634,26 @@ function Import-UserProfile {
             }
         }
         Log-Message "Target SID resolved: $sid"
+
+        # === DOMAIN JOIN ===
+        if ($isDomain -and $global:DomainCheckBox -and $global:DomainCheckBox.Checked) {
+            try {
+                Log-Message "Domain join requested. Initiating join..."
+                $domainName = $global:DomainNameTextBox.Text.Trim()
+                $computerName = $global:ComputerNameTextBox.Text.Trim()
+                $restartMode = if ($global:RestartComboBox.SelectedItem) { $global:RestartComboBox.SelectedItem } else { 'Prompt' }
+                $delaySeconds = 30
+                if ($global:DelayTextBox.Enabled -and $global:DelayTextBox.Text -match '^[0-9]+$') {
+                    $delaySeconds = [int]$global:DelayTextBox.Text
+                }
+                $cred = $null
+                if ($global:DomainCredential) { $cred = $global:DomainCredential }
+                Join-Domain-Enhanced -ComputerName $computerName -DomainName $domainName -RestartBehavior $restartMode -DelaySeconds $delaySeconds -Credential $cred
+            } catch {
+                Log-Error "Domain join failed: $_"
+                Show-ModernDialog -Message "Domain join failed:`n$_" -Title "Domain Join Error" -Type Error -Buttons OK
+            }
+        }
         
         $global:StatusText.Text = "Preparing target directory..."
         [System.Windows.Forms.Application]::DoEvents()
@@ -4163,9 +4671,7 @@ function Import-UserProfile {
         # PRE-FLIGHT CHECK: Detect if profile is currently mounted/logged in
         if (Test-ProfileMounted $sid) {
             Log-Message "WARNING: User profile is currently mounted (user may be logged in via HKU)"
-            $res = [System.Windows.Forms.MessageBox]::Show(
-                "User profile is currently mounted in registry (HKU\$sid).`n`nThis may indicate the user is logged in. Importing now may cause data loss or corruption.`n`nContinue anyway?",
-                "Profile Mounted", "YesNo", "Warning")
+            $res = Show-ModernDialog -Message "User profile is currently mounted in registry (HKU\$sid).`n`nThis may indicate the user is logged in. Importing now may cause data loss or corruption.`n`nContinue anyway?" -Title "Profile Mounted" -Type Warning -Buttons YesNo
             if ($res -ne "Yes") {
                 throw "Cancelled - profile is mounted"
             }
@@ -4200,6 +4706,7 @@ function Import-UserProfile {
                     "`"$backup`"",
                     '/E',           # Copy subdirectories including empty
                     '/COPYALL',     # Copy all file info (timestamps, ACLs, owner, auditing)
+                    '/XJ',          # Exclude junction points (prevent infinite loops)
                     '/R:2',         # Retry 2 times on failed copies
                     '/W:1',         # Wait 1 second between retries
                     "/MT:$robocopyThreads",  # Multi-threaded (dynamic based on CPU cores)
@@ -4436,6 +4943,54 @@ function Import-UserProfile {
             Log-Message "WARNING: Could not parse manifest: $_"
         }
         
+        # === AZUREAD/ENTRA ID VALIDATION ===
+        if ($manifest -and $manifest.IsAzureADUser) {
+            Log-Message "Detected AzureAD/Entra ID profile in manifest"
+            
+            # Verify that the username was correctly identified as AzureAD
+            # (Either explicit "AzureAD\username" format OR auto-detected by SID pattern)
+            if (-not $isAzureAD) {
+                Log-Message "WARNING: Manifest indicates AzureAD profile but username was not detected as AzureAD user"
+                Log-Message "Current username format: $importTargetUser (parsed as $(if ($isDomain) { 'DOMAIN' } else { 'LOCAL' }) user)"
+                
+                # Suggest correction
+                $suggestFormat = "AzureAD\$($manifest.Username)"
+                $formatResult = Show-ModernDialog -Message "Import mismatch detected!`n`nThe profile was exported from an AzureAD/Entra ID user, but the target username '$importTargetUser' was not recognized as an AzureAD account.`n`nDid you mean: $suggestFormat ?`n`nClick Yes to correct the username format, or No to continue (may fail)." -Title "AzureAD Profile Mismatch" -Type Warning -Buttons YesNo
+                if ($formatResult -eq "Yes") {
+                    # Force correct AzureAD format
+                    $Username = $suggestFormat
+                    $shortName = $manifest.Username
+                    $isAzureAD = $true
+                    $isDomain = $false
+                    Log-Message "Username corrected to: $Username (AzureAD format)"
+                } else {
+                    Log-Message "User chose to continue with current username format - import may fail"
+                }
+            } else {
+                Log-Message "AzureAD user correctly identified - proceeding with import"
+            }
+            
+            # Only require AzureAD join if the target user is AzureAD (after possible correction)
+            if ($isAzureAD) {
+                if (-not (Test-IsAzureADJoined)) {
+                    Log-Message "WARNING: Importing AzureAD profile but system is not AzureAD joined"
+                    # Show guidance dialog
+                    $dlgResult = Show-AzureADJoinDialog -Username $manifest.Username
+                    if ($dlgResult -eq "Cancel") {
+                        throw "Import cancelled - AzureAD join required for this profile"
+                    }
+                    # User clicked Continue Import - re-check join status
+                    if (-not (Test-IsAzureADJoined)) {
+                        throw "System is still not AzureAD joined. Please complete the join process in Settings > Accounts > Access work or school and try again."
+                    }
+                    Log-Message "AzureAD join status verified after user completed join process"
+                }
+                Log-Message "System is AzureAD joined - proceeding with import"
+            } else {
+                Log-Message "Target user is not AzureAD after mismatch dialog. Skipping AzureAD join check."
+            }
+        }
+        
         $global:ProgressBar.Value = 25
         # Install Winget apps from the correct location based on mode
         if ($mergeMode) {
@@ -4613,8 +5168,8 @@ function Import-UserProfile {
             # DOMAIN USER - Set-ProfileAcls handles SID translation + ACLs
             $global:StatusText.Text = "Applying DOMAIN user permissions + SID translation..."
             [System.Windows.Forms.Application]::DoEvents()
-            Log-Message "DOMAIN USER: Applying profile ACLs for $Username..."
-            Set-ProfileAcls -ProfileFolder $target -UserName $Username -SourceSID $sourceSID -UserSID $sid
+            Log-Message "DOMAIN USER: Applying profile ACLs for $importTargetUser..."
+            Set-ProfileAcls -ProfileFolder $target -UserName $importTargetUser -SourceSID $sourceSID -UserSID $sid
             Log-Message "DOMAIN user profile fully prepared - first logon will succeed"
         }
         if (-not $isDomain) {
@@ -4763,13 +5318,6 @@ function Import-UserProfile {
         # 1. Binary SID replacement (handled in Rewrite-HiveSID)
         # 2. Path string replacement for embedded paths (handled in Rewrite-HiveSID)
         Log-Message "Hive extraction complete - all settings preserved from source"
-
-		# --------------------------------------------------------------
-		# NOTE: Registry migration sections (printers, drives, shell extensions, theme)
-		# have been removed because files are extracted directly to target.
-		# NTUSER.DAT already contains all source profile settings.
-		# SID rewrite in Set-ProfileAcls handles necessary transformations.
-		# --------------------------------------------------------------
 
 		# --------------------------------------------------------------
 		# FINAL SUCCESS
@@ -5012,7 +5560,7 @@ function Import-UserProfile {
             }
             
             $reportData = @{
-                Username = $Username
+                Username = $importTargetUser
                 UserType = if ($isDomain) { 'Domain' } else { 'Local' }
                 TargetSID = $sid
                 SourceSID = if ($sourceSID) { $sourceSID } else { 'N/A' }
@@ -5041,17 +5589,10 @@ function Import-UserProfile {
             Log-Warning "Could not generate migration report: $_"
         }
         
-        $successMsg = "IMPORT SUCCESSFUL`n`nUser: $Username`nSID: $sid`nPath: $target`n`n"
-        if (-not $isDomain) {
-            $successMsg += "Local user configured for login screen`nGPSVC permissions applied`n`n"
-        }
+        $successMsg = "IMPORT SUCCESSFUL`n`nUser: $importTargetUser`nSID: $sid`nPath: $target`n`n"
         $successMsg += "REBOOT NOW, THEN LOG IN`n`n"
-        $successMsg += "EMAIL SETUP (After First Login):`n"
-        $successMsg += "- Outlook will rebuild mailbox cache (10-30 min)`n"
-        $successMsg += "- Re-enter email passwords if prompted`n"
-        $successMsg += "- Reconnect to Exchange/Microsoft 365`n"
-        $successMsg += "- Copy PST archives manually if stored outside profile"
-        [System.Windows.Forms.MessageBox]::Show($successMsg, "SUCCESS", "OK", "Information")
+        Show-ModernDialog -Message $successMsg -Title "SUCCESS" -Type Success -Buttons OK
+
     } catch {
         Log-Message "=========================================="
         Log-Message "IMPORT FAILED: $_"
@@ -5093,7 +5634,7 @@ function Import-UserProfile {
             Log-Message "Operation elapsed time: $($elapsed.TotalMinutes.ToString('F2')) minutes ($($elapsed.TotalSeconds.ToString('F0')) seconds)"
         }
         
-        [System.Windows.Forms.MessageBox]::Show("Import failed: $_","Error","OK","Error")
+        Show-ModernDialog -Message "Import failed: $_" -Title "Error" -Type Error -Buttons OK
     } finally {
         Stop-OperationLog
         # No temp folder cleanup needed - files extracted directly to target
@@ -5278,11 +5819,285 @@ $global:UserComboBox.Font = New-Object System.Drawing.Font("Segoe UI", 9)
 Get-ProfileDisplayEntries | ForEach-Object { $global:UserComboBox.Items.Add($_.DisplayName) | Out-Null }
 $cardPanel.Controls.Add($global:UserComboBox)
 
+# Set Target User button
+$btnSetTargetUser = New-Object System.Windows.Forms.Button
+$btnSetTargetUser.Location = New-Object System.Drawing.Point(15, 45)
+$btnSetTargetUser.Size = New-Object System.Drawing.Size(120, 28)
+$btnSetTargetUser.Text = "Set Target User"
+$btnSetTargetUser.BackColor = [System.Drawing.Color]::FromArgb(0, 120, 212)
+$btnSetTargetUser.ForeColor = [System.Drawing.Color]::White
+$btnSetTargetUser.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$btnSetTargetUser.Font = New-Object System.Drawing.Font("Segoe UI", 9, [System.Drawing.FontStyle]::Bold)
+$btnSetTargetUser.Cursor = [System.Windows.Forms.Cursors]::Hand
+$btnSetTargetUser.Add_MouseEnter({ $this.BackColor = [System.Drawing.Color]::FromArgb(16, 110, 190) })
+$btnSetTargetUser.Add_MouseLeave({ $this.BackColor = [System.Drawing.Color]::FromArgb(0, 120, 212) })
+$cardPanel.Controls.Add($btnSetTargetUser)
+
+# Status label for user type
+$lblUserTypeStatus = New-Object System.Windows.Forms.Label
+$lblUserTypeStatus.Location = New-Object System.Drawing.Point(145, 45)
+$lblUserTypeStatus.Size = New-Object System.Drawing.Size(260, 28)
+$lblUserTypeStatus.Text = ""
+$lblUserTypeStatus.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+$cardPanel.Controls.Add($lblUserTypeStatus)
+
+$btnSetTargetUser.Add_Click({
+    $selectedUser = $global:UserComboBox.Text.Trim()
+    $isDomain = $false
+    $isAzureAD = $false
+    $domain = ""
+    # AzureAD\user
+    if ($selectedUser -match '^AzureAD\\(.+)$') {
+        $isAzureAD = $true
+        $lblUserTypeStatus.Text = "Target user is AzureAD/Entra ID"
+        $lblUserTypeStatus.ForeColor = [System.Drawing.Color]::FromArgb(0, 120, 212)
+        $global:DomainCheckBox.Checked = $false
+        $global:DomainNameTextBox.Text = ""
+        # --- AzureAD/Entra ID checks ---
+        if (-not (Test-IsAzureADJoined)) {
+            $dlgResult = Show-AzureADJoinDialog -Username $selectedUser
+            $lblUserTypeStatus.Text = "Device is NOT AzureAD joined!"
+            $lblUserTypeStatus.ForeColor = [System.Drawing.Color]::FromArgb(232, 17, 35)
+            $global:SelectedTargetUser = $null
+            Log-Info "Set Target User: AzureAD join required. Aborted."
+            [System.Windows.Forms.Application]::DoEvents()
+            return
+        }
+        # Check if user has signed in at least once
+        try {
+            $azureProfile = Get-WmiObject Win32_UserProfile | Where-Object {
+                $_.LocalPath -like "*\\$($selectedUser -replace '^AzureAD\\','')" -and (Test-IsAzureADSID $_.SID)
+            } | Select-Object -First 1
+            if (-not $azureProfile) {
+                # Custom-styled dialog matching AzureAD/Entra ID Join Required
+                $azForm = New-Object System.Windows.Forms.Form
+                $azForm.Text = "AzureAD/Entra ID User Not Found"
+                $azForm.Size = New-Object System.Drawing.Size(700, 540)
+                $azForm.StartPosition = "CenterScreen"
+                $azForm.FormBorderStyle = "FixedDialog"
+                $azForm.MaximizeBox = $false
+                $azForm.MinimizeBox = $false
+                $azForm.TopMost = $true
+                $azForm.BackColor = [System.Drawing.Color]::White
+                $azForm.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+
+                # Header
+                $headerPanel = New-Object System.Windows.Forms.Panel
+                $headerPanel.Location = New-Object System.Drawing.Point(0, 0)
+                $headerPanel.Size = New-Object System.Drawing.Size(700, 90)
+                $headerPanel.BackColor = [System.Drawing.Color]::FromArgb(0, 120, 212)
+                $azForm.Controls.Add($headerPanel)
+
+                $lblTitle = New-Object System.Windows.Forms.Label
+                $lblTitle.Location = New-Object System.Drawing.Point(20, 15)
+                $lblTitle.Size = New-Object System.Drawing.Size(660, 30)
+                $lblTitle.Text = "AzureAD/Entra ID User Not Found"
+                $lblTitle.Font = New-Object System.Drawing.Font("Segoe UI", 14, [System.Drawing.FontStyle]::Bold)
+                $lblTitle.ForeColor = [System.Drawing.Color]::White
+                $headerPanel.Controls.Add($lblTitle)
+
+                $lblSubtitle = New-Object System.Windows.Forms.Label
+                $lblSubtitle.Location = New-Object System.Drawing.Point(22, 43)
+                $lblSubtitle.Size = New-Object System.Drawing.Size(660, 28)
+                $lblSubtitle.Text = "User must sign in at least once before import."
+                $lblSubtitle.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+                $lblSubtitle.ForeColor = [System.Drawing.Color]::White
+                $headerPanel.Controls.Add($lblSubtitle)
+
+                # Main content
+                $contentPanel = New-Object System.Windows.Forms.Panel
+                $contentPanel.Location = New-Object System.Drawing.Point(0, 70)
+                $contentPanel.Size = New-Object System.Drawing.Size(700, 350)
+                $contentPanel.BackColor = [System.Drawing.Color]::White
+                $azForm.Controls.Add($contentPanel)
+
+                $lblInfo = New-Object System.Windows.Forms.Label
+                $lblInfo.Location = New-Object System.Drawing.Point(30, 20)
+                $lblInfo.Size = New-Object System.Drawing.Size(660, 270)
+                $lblInfo.Text = (
+                    "The AzureAD/Entra ID user '" + $selectedUser + "' has not signed in to this device." +
+                    [Environment]::NewLine + [Environment]::NewLine +
+                    "The user must sign in at least once to create their profile before you can import." +
+                    [Environment]::NewLine + [Environment]::NewLine +
+                    "Please have the user sign in, then try again."
+                )
+                $lblInfo.Font = New-Object System.Drawing.Font("Segoe UI", 10)
+                $lblInfo.ForeColor = [System.Drawing.Color]::FromArgb(80, 80, 80)
+                $lblInfo.TextAlign = 'TopLeft'
+                $contentPanel.Controls.Add($lblInfo)
+
+                # OK button
+                $btnOK = New-Object System.Windows.Forms.Button
+                $btnOK.Location = New-Object System.Drawing.Point(295, 310)
+                $btnOK.Size = New-Object System.Drawing.Size(110, 35)
+                $btnOK.Text = "OK"
+                $btnOK.BackColor = [System.Drawing.Color]::FromArgb(0, 120, 212)
+                $btnOK.ForeColor = [System.Drawing.Color]::White
+                $btnOK.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+                $btnOK.FlatAppearance.BorderSize = 0
+                $btnOK.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
+                $btnOK.Cursor = [System.Windows.Forms.Cursors]::Hand
+                $btnOK.DialogResult = [System.Windows.Forms.DialogResult]::OK
+                $contentPanel.Controls.Add($btnOK)
+                $azForm.AcceptButton = $btnOK
+
+                $azForm.ShowDialog() | Out-Null
+                $lblUserTypeStatus.Text = "AzureAD user has NOT signed in!"
+                $lblUserTypeStatus.ForeColor = [System.Drawing.Color]::FromArgb(232, 17, 35)
+                $global:SelectedTargetUser = $null
+                Log-Info "Set Target User: AzureAD user has not signed in. Aborted."
+                [System.Windows.Forms.Application]::DoEvents()
+                return
+            } else {
+                Log-Info "AzureAD user profile found - ready for import."
+            }
+        } catch {
+            [System.Windows.Forms.MessageBox]::Show("Failed to verify AzureAD user profile: $_", "AzureAD User Check Failed", "OK", "Error") | Out-Null
+            $lblUserTypeStatus.Text = "AzureAD user check failed!"
+            $lblUserTypeStatus.ForeColor = [System.Drawing.Color]::FromArgb(232, 17, 35)
+            $global:SelectedTargetUser = $null
+            Log-Info "Set Target User: AzureAD user check failed. Aborted."
+            [System.Windows.Forms.Application]::DoEvents()
+            return
+        }
+    }
+    # DOMAIN\user
+    elseif ($selectedUser -match '^(?<domain>[^\\]+)\\(?<user>.+)$') {
+        $parsedDomain = $matches['domain'].Trim().ToUpper()
+        # Check if domain is actually the computer name (local user)
+        if ($parsedDomain -ieq $env:COMPUTERNAME) {
+            $lblUserTypeStatus.Text = "Target user is Local account"
+            $lblUserTypeStatus.ForeColor = [System.Drawing.Color]::FromArgb(16, 124, 16)
+            $global:DomainCheckBox.Checked = $false
+            $global:DomainNameTextBox.Text = ""
+        } else {
+            # Check all profiles for AzureAD SID pattern
+            try {
+                $allProfiles = Get-WmiObject Win32_UserProfile
+                $profiles = $allProfiles | Where-Object {
+                    $_.LocalPath -like "*\$($matches['user'])"
+                }
+                $isAzureAD = $false
+                $allSids = @()
+                $azureSids = @()
+                foreach ($p in $profiles) {
+                    $allSids += $p.SID
+                    if (Test-IsAzureADSID $p.SID) {
+                        $azureSids += $p.SID
+                        $isAzureAD = $true
+                    }
+                }
+                Log-Info ("Set Target User: Username={0}, Domain={1}, AllSIDs={2}, AzureADSIDs={3}, IsAzureAD={4}" -f $matches['user'], $parsedDomain, ($allSids -join ', '), ($azureSids -join ', '), $isAzureAD)
+                if ($isAzureAD) {
+                    $lblUserTypeStatus.Text = "Target user is AzureAD/Entra ID (tenant: $parsedDomain)"
+                    $lblUserTypeStatus.ForeColor = [System.Drawing.Color]::FromArgb(0, 120, 212)
+                    $global:DomainCheckBox.Checked = $false
+                    $global:DomainNameTextBox.Text = ""
+                    # --- AzureAD/Entra ID checks ---
+                    if (-not (Test-IsAzureADJoined)) {
+                        $dlgResult = Show-AzureADJoinDialog -Username $selectedUser
+                        $lblUserTypeStatus.Text = "Device is NOT AzureAD joined!"
+                        $lblUserTypeStatus.ForeColor = [System.Drawing.Color]::FromArgb(232, 17, 35)
+                        $global:SelectedTargetUser = $null
+                        Log-Info "Set Target User: AzureAD join required. Aborted."
+                        [System.Windows.Forms.Application]::DoEvents()
+                        return
+                    }
+                    try {
+                        $azureProfile = $profiles | Where-Object { Test-IsAzureADSID $_.SID } | Select-Object -First 1
+                        if (-not $azureProfile) {
+                            [System.Windows.Forms.MessageBox]::Show("The AzureAD/Entra ID user '$($matches['user'])' has not signed in to this device.\n\nThe user must sign in at least once to create their profile before you can import.\n\nPlease have the user sign in, then try again.", "AzureAD User Not Found", "OK", "Warning") | Out-Null
+                            $lblUserTypeStatus.Text = "AzureAD user has NOT signed in!"
+                            $lblUserTypeStatus.ForeColor = [System.Drawing.Color]::FromArgb(232, 17, 35)
+                            $global:SelectedTargetUser = $null
+                            Log-Info "Set Target User: AzureAD user has not signed in. Aborted."
+                            [System.Windows.Forms.Application]::DoEvents()
+                            return
+                        } else {
+                            Log-Info "AzureAD user profile found - ready for import."
+                        }
+                    } catch {
+                        [System.Windows.Forms.MessageBox]::Show("Failed to verify AzureAD user profile: $_", "AzureAD User Check Failed", "OK", "Error") | Out-Null
+                        $lblUserTypeStatus.Text = "AzureAD user check failed!"
+                        $lblUserTypeStatus.ForeColor = [System.Drawing.Color]::FromArgb(232, 17, 35)
+                        $global:SelectedTargetUser = $null
+                        Log-Info "Set Target User: AzureAD user check failed. Aborted."
+                        [System.Windows.Forms.Application]::DoEvents()
+                        return
+                    }
+                } else {
+                    $isDomain = $true
+                    $domain = $parsedDomain
+                    $lblUserTypeStatus.Text = "Target user is Domain account ($domain)"
+                    $lblUserTypeStatus.ForeColor = [System.Drawing.Color]::FromArgb(232, 17, 35)
+                    # Only check the Join Domain box if not already domain-joined
+                    $partOfDomain = $false
+                    try {
+                        $cs = Get-WmiObject Win32_ComputerSystem -ErrorAction Stop
+                        $partOfDomain = $cs.PartOfDomain
+                    } catch {}
+                    if (-not $partOfDomain) {
+                        $global:DomainCheckBox.Checked = $true
+                    } else {
+                        $global:DomainCheckBox.Checked = $false
+                    }
+                    $global:RestartComboBox.SelectedItem = "Never"
+                    # Use FQDN resolution for domain name (.local/.com/.net/etc)
+                    $fqdn = $null
+                    try {
+                        $fqdn = Get-DomainFQDN -NetBIOSName $domain
+                    } catch {}
+                    if ($fqdn) {
+                        $global:DomainNameTextBox.Text = $fqdn
+                    } else {
+                        $global:DomainNameTextBox.Text = $domain
+                    }
+                }
+            } catch {
+                $isDomain = $true
+                $domain = $parsedDomain
+                $lblUserTypeStatus.Text = "Target user is Domain account ($domain)"
+                $lblUserTypeStatus.ForeColor = [System.Drawing.Color]::FromArgb(232, 17, 35)
+                # Only check the Join Domain box if not already domain-joined
+                $partOfDomain = $false
+                try {
+                    $cs = Get-WmiObject Win32_ComputerSystem -ErrorAction Stop
+                    $partOfDomain = $cs.PartOfDomain
+                } catch {}
+                if (-not $partOfDomain) {
+                    $global:DomainCheckBox.Checked = $true
+                } else {
+                    $global:DomainCheckBox.Checked = $false
+                }
+                $global:RestartComboBox.SelectedItem = "Never"
+                # Use FQDN resolution for domain name (.local/.com/.net/etc)
+                $fqdn = $null
+                try {
+                    $fqdn = Get-DomainFQDN -NetBIOSName $domain
+                } catch {}
+                if ($fqdn) {
+                    $global:DomainNameTextBox.Text = $fqdn
+                } else {
+                    $global:DomainNameTextBox.Text = $domain
+                }
+            }
+        }
+    } else {
+        $lblUserTypeStatus.Text = "Target user is Local account"
+        $lblUserTypeStatus.ForeColor = [System.Drawing.Color]::FromArgb(16, 124, 16)
+        $global:DomainCheckBox.Checked = $false
+        $global:DomainNameTextBox.Text = ""
+    }
+    $global:SelectedTargetUser = $selectedUser
+    Log-Info "Set Target User: $selectedUser (stored in global:SelectedTargetUser)"
+    [System.Windows.Forms.Application]::DoEvents()
+})
+
 # Refresh Profiles button
 $btnRefreshProfiles = New-Object System.Windows.Forms.Button
 $btnRefreshProfiles.Location = New-Object System.Drawing.Point(405, 10)
 $btnRefreshProfiles.Size = New-Object System.Drawing.Size(30, 28)
-$btnRefreshProfiles.Text = "⟳"
+$btnRefreshProfiles.Text = "Refresh"
 $btnRefreshProfiles.BackColor = [System.Drawing.Color]::FromArgb(0, 120, 212)
 $btnRefreshProfiles.ForeColor = [System.Drawing.Color]::White
 $btnRefreshProfiles.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
@@ -5342,7 +6157,7 @@ $btnRefreshProfiles.Add_Click({
     } catch {
         $global:StatusText.Text = "Error scanning profiles: $_"
         $global:StatusText.ForeColor = [System.Drawing.Color]::FromArgb(232, 17, 35)
-        [System.Windows.Forms.MessageBox]::Show("Error refreshing profiles: $_", "Error", "OK", "Error")
+        Show-ModernDialog -Message "Error refreshing profiles: $_" -Title "Error" -Type Error -Buttons OK
     } finally {
         # Restore original status
         $global:StatusText.Text = $originalStatusText
@@ -5406,10 +6221,10 @@ $global:ViewLogButton.Add_Click({
             if ($latestLog) {
                 Show-LogViewer -LogPath $latestLog.FullName -Title "Latest Log: $($latestLog.Name)"
             } else {
-                [System.Windows.Forms.MessageBox]::Show("No log files found.`n`nLog files will be created in the Logs folder when you run Export or Import operations.", "No Logs", "OK", "Information")
+                Show-ModernDialog -Message "No log files found.`n`nLog files will be created in the Logs folder when you run Export or Import operations." -Title "No Logs" -Type Info -Buttons OK
             }
         } else {
-            [System.Windows.Forms.MessageBox]::Show("No log files found.`n`nLog files will be created in the Logs folder when you run Export or Import operations.", "No Logs", "OK", "Information")
+            Show-ModernDialog -Message "No log files found.`n`nLog files will be created in the Logs folder when you run Export or Import operations." -Title "No Logs" -Type Info -Buttons OK
         }
     }
 })
@@ -5462,6 +6277,117 @@ $global:ExportButton.Add_MouseLeave({
     $this.BackColor = [System.Drawing.Color]::FromArgb(0, 120, 212)
 })
 $cardPanel.Controls.Add($global:ExportButton)
+$global:ExportButton.Add_Click({
+    try {
+        # Always uncheck Join Domain After Import when exporting
+        if ($global:DomainCheckBox) { $global:DomainCheckBox.Checked = $false }
+        # Validate user selection
+        $username = $global:SelectedTargetUser
+        if (-not $username -or $username -eq "") {
+            # Custom-styled dialog for No User Selected (Export)
+            $noUserForm = New-Object System.Windows.Forms.Form
+            $noUserForm.Text = "No User Selected"
+            $noUserForm.Size = New-Object System.Drawing.Size(500, 260)
+            $noUserForm.StartPosition = "CenterScreen"
+            $noUserForm.FormBorderStyle = "FixedDialog"
+            $noUserForm.MaximizeBox = $false
+            $noUserForm.MinimizeBox = $false
+            $noUserForm.TopMost = $true
+            $noUserForm.BackColor = [System.Drawing.Color]::FromArgb(245, 245, 245)
+            $noUserForm.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+
+            # Header panel
+            $headerPanel = New-Object System.Windows.Forms.Panel
+            $headerPanel.Location = New-Object System.Drawing.Point(0, 0)
+            $headerPanel.Size = New-Object System.Drawing.Size(500, 60)
+            $headerPanel.BackColor = [System.Drawing.Color]::White
+            $noUserForm.Controls.Add($headerPanel)
+
+            $lblTitle = New-Object System.Windows.Forms.Label
+            $lblTitle.Location = New-Object System.Drawing.Point(20, 15)
+            $lblTitle.Size = New-Object System.Drawing.Size(460, 30)
+            $lblTitle.Text = "No User Selected"
+            $lblTitle.Font = New-Object System.Drawing.Font("Segoe UI", 12, [System.Drawing.FontStyle]::Bold)
+            $lblTitle.ForeColor = [System.Drawing.Color]::FromArgb(0, 120, 212)
+            $headerPanel.Controls.Add($lblTitle)
+
+            # Content panel
+            $contentPanel = New-Object System.Windows.Forms.Panel
+            $contentPanel.Location = New-Object System.Drawing.Point(15, 70)
+            $contentPanel.Size = New-Object System.Drawing.Size(460, 80)
+            $contentPanel.BackColor = [System.Drawing.Color]::White
+            $noUserForm.Controls.Add($contentPanel)
+
+            $lblInfo = New-Object System.Windows.Forms.Label
+            $lblInfo.Location = New-Object System.Drawing.Point(10, 10)
+            $lblInfo.Size = New-Object System.Drawing.Size(440, 60)
+            $lblInfo.Text = "Please use the 'Set Target User' button to select and confirm the user profile to export."
+            $lblInfo.Font = New-Object System.Drawing.Font("Segoe UI", 10)
+            $lblInfo.ForeColor = [System.Drawing.Color]::FromArgb(80, 80, 80)
+            $contentPanel.Controls.Add($lblInfo)
+
+            # OK button
+            $btnOK = New-Object System.Windows.Forms.Button
+            $btnOK.Location = New-Object System.Drawing.Point(195, 170)
+            $btnOK.Size = New-Object System.Drawing.Size(110, 35)
+            $btnOK.Text = "OK"
+            $btnOK.BackColor = [System.Drawing.Color]::FromArgb(0, 120, 212)
+            $btnOK.ForeColor = [System.Drawing.Color]::White
+            $btnOK.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+            $btnOK.FlatAppearance.BorderSize = 0
+            $btnOK.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
+            $btnOK.Cursor = [System.Windows.Forms.Cursors]::Hand
+            $btnOK.DialogResult = [System.Windows.Forms.DialogResult]::OK
+            $noUserForm.Controls.Add($btnOK)
+            $noUserForm.AcceptButton = $btnOK
+
+            $noUserForm.ShowDialog() | Out-Null
+            $noUserForm.Dispose()
+            return
+        }
+        # Validate ZIP path
+        $zipPath = $global:SelectedZipPath
+        # Restore previous export filename format: username-Export-yyyyMMdd_HHmmss.zip
+        $defaultFileName = ""
+        if ($zipPath -and $zipPath -ne "") {
+            $defaultFileName = [System.IO.Path]::GetFileName($zipPath)
+        } else {
+            $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+            # Remove domain prefix if present
+            $shortName = $username
+            if ($username -match "^.+\\(.+)$") { $shortName = $matches[1] }
+            $defaultFileName = "$shortName-Export-$timestamp.zip"
+        }
+        if (-not $zipPath -or $zipPath -eq "") {
+            # Prompt user for save location
+            $saveDialog = New-Object System.Windows.Forms.SaveFileDialog
+            $saveDialog.Title = "Select Export Destination"
+            $saveDialog.Filter = "Profile Archive (*.zip)|*.zip|All Files (*.*)|*.*"
+            $saveDialog.FileName = $defaultFileName
+            $saveDialog.InitialDirectory = [Environment]::GetFolderPath('Desktop')
+            if ($saveDialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+                $zipPath = $saveDialog.FileName
+                $global:SelectedZipPath = $zipPath
+            } else {
+                return
+            }
+        }
+        # Confirm export (ensure full path is visible)
+        $msg = "You are about to export the profile for user:" + [Environment]::NewLine +
+            "    $username" + [Environment]::NewLine + [Environment]::NewLine +
+            "To archive (full path):" + [Environment]::NewLine +
+            "    " + $zipPath + [Environment]::NewLine + [Environment]::NewLine +
+            "Continue with export?"
+        # Use Show-ModernDialog, and if possible, set a wider minimum width for the dialog
+        $result = Show-ModernDialog -Message $msg -Title "Confirm Export" -Type Question -Buttons YesNo
+        if ($result -ne "Yes") { return }
+        # Start export
+        Export-UserProfile -Username $username -ZipPath $zipPath
+    } catch {
+        Log-Error "Export failed: $_"
+        Show-ModernDialog -Message "Export failed: $_" -Title "Export Error" -Type Error -Buttons OK
+    }
+})
 
 $global:ImportButton = New-Object System.Windows.Forms.Button
 $global:ImportButton.Location = New-Object System.Drawing.Point(725, 8)
@@ -5480,6 +6406,95 @@ $global:ImportButton.Add_MouseLeave({
     $this.BackColor = [System.Drawing.Color]::FromArgb(16, 124, 16)
 })
 $cardPanel.Controls.Add($global:ImportButton)
+
+# Add Click handler for ImportButton
+$global:ImportButton.Add_Click({
+    try {
+        # Validate ZIP selection
+        $zipPath = $global:SelectedZipPath
+        if (-not $zipPath -or -not (Test-Path $zipPath)) {
+            Show-ModernDialog -Message "Please select a valid profile archive (ZIP) before importing." -Title "No ZIP Selected" -Type Warning -Buttons OK
+            return
+        }
+        # Use the target user set by the Set Target User button
+        $username = $global:SelectedTargetUser
+        if (-not $username -or $username -eq "") {
+            # Custom-styled dialog for No User Selected (Import)
+            $noUserForm = New-Object System.Windows.Forms.Form
+            $noUserForm.Text = "No User Selected"
+            $noUserForm.Size = New-Object System.Drawing.Size(420, 220)
+            $noUserForm.StartPosition = "CenterScreen"
+            $noUserForm.FormBorderStyle = "FixedDialog"
+            $noUserForm.MaximizeBox = $false
+            $noUserForm.MinimizeBox = $false
+            $noUserForm.TopMost = $true
+            $noUserForm.BackColor = [System.Drawing.Color]::FromArgb(245, 245, 245)
+            $noUserForm.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+
+            # Header panel
+            $headerPanel = New-Object System.Windows.Forms.Panel
+            $headerPanel.Location = New-Object System.Drawing.Point(0, 0)
+            $headerPanel.Size = New-Object System.Drawing.Size(420, 60)
+            $headerPanel.BackColor = [System.Drawing.Color]::White
+            $noUserForm.Controls.Add($headerPanel)
+
+            $lblTitle = New-Object System.Windows.Forms.Label
+            $lblTitle.Location = New-Object System.Drawing.Point(20, 15)
+            $lblTitle.Size = New-Object System.Drawing.Size(380, 30)
+            $lblTitle.Text = "No User Selected"
+            $lblTitle.Font = New-Object System.Drawing.Font("Segoe UI", 12, [System.Drawing.FontStyle]::Bold)
+            $lblTitle.ForeColor = [System.Drawing.Color]::FromArgb(0, 120, 212)
+            $headerPanel.Controls.Add($lblTitle)
+
+            # Content panel
+            $contentPanel = New-Object System.Windows.Forms.Panel
+            $contentPanel.Location = New-Object System.Drawing.Point(15, 70)
+            $contentPanel.Size = New-Object System.Drawing.Size(380, 60)
+            $contentPanel.BackColor = [System.Drawing.Color]::White
+            $noUserForm.Controls.Add($contentPanel)
+
+            $lblInfo = New-Object System.Windows.Forms.Label
+            $lblInfo.Location = New-Object System.Drawing.Point(10, 10)
+            $lblInfo.Size = New-Object System.Drawing.Size(360, 40)
+            $lblInfo.Text = "Please use the 'Set Target User' button to select and confirm the target user before importing."
+            $lblInfo.Font = New-Object System.Drawing.Font("Segoe UI", 10)
+            $lblInfo.ForeColor = [System.Drawing.Color]::FromArgb(80, 80, 80)
+            $contentPanel.Controls.Add($lblInfo)
+
+            # OK button
+            $btnOK = New-Object System.Windows.Forms.Button
+            $btnOK.Location = New-Object System.Drawing.Point(150, 145)
+            $btnOK.Size = New-Object System.Drawing.Size(110, 35)
+            $btnOK.Text = "OK"
+            $btnOK.BackColor = [System.Drawing.Color]::FromArgb(0, 120, 212)
+            $btnOK.ForeColor = [System.Drawing.Color]::White
+            $btnOK.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+            $btnOK.FlatAppearance.BorderSize = 0
+            $btnOK.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
+            $btnOK.Cursor = [System.Windows.Forms.Cursors]::Hand
+            $btnOK.DialogResult = [System.Windows.Forms.DialogResult]::OK
+            $noUserForm.Controls.Add($btnOK)
+            $noUserForm.AcceptButton = $btnOK
+
+            $noUserForm.ShowDialog() | Out-Null
+            $noUserForm.Dispose()
+            return
+        }
+        # Confirm import
+         $msg = "You are about to import the profile for user:" + [Environment]::NewLine +
+             "    $username" + [Environment]::NewLine + [Environment]::NewLine +
+             "From archive:" + [Environment]::NewLine +
+             "    $zipPath" + [Environment]::NewLine + [Environment]::NewLine +
+             "Continue with import?"
+         $result = Show-ModernDialog -Message $msg -Title "Confirm Import" -Type Question -Buttons YesNo
+        if ($result -ne "Yes") { return }
+        # Start import
+        Import-UserProfile -ZipPath $zipPath -Username $username
+    } catch {
+        Log-Error "Import failed: $_"
+        Show-ModernDialog -Message "Import failed: $_" -Title "Import Error" -Type Error -Buttons OK
+    }
+})
 
 # Cancel Button (in second row, rightmost position)
 $global:CancelButton = New-Object System.Windows.Forms.Button
@@ -5501,9 +6516,7 @@ $global:CancelButton.Add_MouseLeave({
 })
 $global:CancelButton.Add_Click({
     if ($global:CurrentOperation) {
-        $result = [System.Windows.Forms.MessageBox]::Show(
-            "Cancel current $($global:CurrentOperation) operation?`n`nThis may leave the profile in an inconsistent state.",
-            "Cancel Operation", "YesNo", "Warning")
+        $result = Show-ModernDialog -Message "Cancel current $($global:CurrentOperation) operation?`n`nThis may leave the profile in an inconsistent state." -Title "Cancel Operation" -Type Warning -Buttons YesNo
         if ($result -eq "Yes") {
             $global:CancelRequested = $true
             Log-Message "User requested cancellation of $($global:CurrentOperation) operation"
@@ -5517,7 +6530,7 @@ $cardPanel.Controls.Add($global:CancelButton)
 
 # File selection indicator
 $global:FileLabel = New-Object System.Windows.Forms.Label
-$global:FileLabel.Location = New-Object System.Drawing.Point(120, 50)
+$global:FileLabel.Location = New-Object System.Drawing.Point(120, 85)
 $global:FileLabel.Size = New-Object System.Drawing.Size(725, 35)
 $global:FileLabel.Text = "No file selected - Use Browse to select a profile archive"
 $global:FileLabel.ForeColor = [System.Drawing.Color]::FromArgb(100, 100, 100)
@@ -5542,7 +6555,7 @@ $domainCard.Controls.Add($lblDomainHeader)
 $global:DomainCheckBox = New-Object System.Windows.Forms.CheckBox
 $global:DomainCheckBox.Location = New-Object System.Drawing.Point(25,45)
 $global:DomainCheckBox.Size = New-Object System.Drawing.Size(200,23)
-$global:DomainCheckBox.Text = "Join Domain After Import"
+$global:DomainCheckBox.Text = "Join Domain"
 $global:DomainCheckBox.Font = New-Object System.Drawing.Font("Segoe UI", 9, [System.Drawing.FontStyle]::Bold)
 $domainCard.Controls.Add($global:DomainCheckBox)
 $lblC = New-Object System.Windows.Forms.Label
@@ -5686,6 +6699,7 @@ $global:BrowseButton.Add_Click({
     $dlg = New-Object System.Windows.Forms.OpenFileDialog
     $dlg.Filter = "ZIP Files (*.zip)|*.zip"
     if ($dlg.ShowDialog() -eq "OK") {
+
         $global:SelectedZipPath = $dlg.FileName
         
         # Update file selection indicator
@@ -5693,6 +6707,7 @@ $global:BrowseButton.Add_Click({
         $sizeKB = [math]::Round($fileInfo.Length / 1KB, 2)
         $sizeMB = [math]::Round($fileInfo.Length / 1MB, 2)
         $sizeDisplay = if ($sizeMB -gt 1) { "$sizeMB MB" } else { "$sizeKB KB" }
+
         $global:FileLabel.Text = "Selected: $($fileInfo.Name) ($sizeDisplay)"
         $global:FileLabel.ForeColor = [System.Drawing.Color]::FromArgb(16, 124, 16)
         
@@ -5702,262 +6717,65 @@ $global:BrowseButton.Add_Click({
         [System.Windows.Forms.Application]::DoEvents()
         Log-Message "Selected: $global:SelectedZipPath"
 
-        # Auto-detect domain profile and pre-select domain join if computer not in a domain
         try {
             $global:ProgressBar.Value = 10
-            $global:StatusText.Text = "Checking computer domain status..."
+            $global:StatusText.Text = "Reading manifest from ZIP..."
             [System.Windows.Forms.Application]::DoEvents()
-            $cs = Get-WmiObject Win32_ComputerSystem -ErrorAction SilentlyContinue
-            $partOfDomain = $cs.PartOfDomain
-            if (-not $partOfDomain) {
-                $global:ProgressBar.Value = 20
-                $global:StatusText.Text = "Reading manifest from ZIP..."
-                [System.Windows.Forms.Application]::DoEvents()
-                Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction SilentlyContinue
-                $zip = [IO.Compression.ZipFile]::OpenRead($global:SelectedZipPath)
-                $entry = $zip.Entries | Where-Object { $_.FullName -ieq 'manifest.json' }
-                if ($entry) {
-                    $sr = New-Object IO.StreamReader($entry.Open())
-                    $jsonContent = $sr.ReadToEnd()
-                    $sr.Dispose(); $zip.Dispose()
-                    try {
-                        $manifestObj = $jsonContent | ConvertFrom-Json -ErrorAction Stop
-                        if ($manifestObj.IsDomainUser -and $manifestObj.Domain) {
-                            # Resolve FQDN from NetBIOS name
-                            $global:ProgressBar.Value = 40
-                            $global:StatusText.Text = "Resolving domain name..."
-                            [System.Windows.Forms.Application]::DoEvents()
-                            $domainName = Get-DomainFQDN -NetBIOSName $manifestObj.Domain
-                            $global:DomainCheckBox.Checked = $true
-                            $global:DomainNameTextBox.Text = $domainName
-                            Log-Message "Auto-enabled domain join (domain: $domainName from NetBIOS: $($manifestObj.Domain)) based on imported profile manifest"
-                            # Warn early if domain appears unreachable
-                            if (Get-Command Test-DomainReachability -ErrorAction SilentlyContinue) {
-                                $global:ProgressBar.Value = 60
-                                $global:StatusText.Text = "Testing domain connectivity..."
-                                [System.Windows.Forms.Application]::DoEvents()
-                                $reach = Test-DomainReachability -DomainName $domainName
-                                if (-not $reach.Success) {
-                                    Log-Message "WARNING: Domain '$domainName' unreachable during ZIP selection: $($reach.Error)"
-                                    $global:DomainCheckBox.Checked = $false
-                                    $global:ProgressBar.Value = 80
-                                    
-                                    # Modern domain unreachable dialog
-                                    $reachForm = New-Object System.Windows.Forms.Form
-                                    $reachForm.Text = "Domain Unreachable"
-                                    $reachForm.Size = New-Object System.Drawing.Size(520,280)
-                                    $reachForm.StartPosition = "CenterScreen"
-                                    $reachForm.TopMost = $true
-                                    $reachForm.FormBorderStyle = "FixedDialog"
-                                    $reachForm.MaximizeBox = $false
-                                    $reachForm.MinimizeBox = $false
-                                    $reachForm.BackColor = [System.Drawing.Color]::White
-                                    $reachForm.Font = New-Object System.Drawing.Font("Segoe UI", 9)
-                                    
-                                    $lblWarning = New-Object System.Windows.Forms.Label
-                                    $lblWarning.Location = New-Object System.Drawing.Point(20,15)
-                                    $lblWarning.Size = New-Object System.Drawing.Size(480,30)
-                                    $lblWarning.Text = "Domain Connection Issue"
-                                    $lblWarning.Font = New-Object System.Drawing.Font("Segoe UI", 12, [System.Drawing.FontStyle]::Bold)
-                                    $lblWarning.ForeColor = [System.Drawing.Color]::FromArgb(232, 17, 35)
-                                    $reachForm.Controls.Add($lblWarning)
-                                    
-                                    $lblMsg = New-Object System.Windows.Forms.Label
-                                    $lblMsg.Location = New-Object System.Drawing.Point(20,55)
-                                    $lblMsg.Size = New-Object System.Drawing.Size(470,120)
-                                    $lblMsg.Text = "Domain '$domainName' appears unreachable right now.`n`nDetail: $($reach.Error)`n`nThe domain join option has been unchecked. Click Retry after connectivity is restored or Close to continue."
-                                    $reachForm.Controls.Add($lblMsg)
-                                    
-                                    $btnRetry = New-Object System.Windows.Forms.Button
-                                    $btnRetry.Location = New-Object System.Drawing.Point(260,195)
-                                    $btnRetry.Size = New-Object System.Drawing.Size(110,35)
-                                    $btnRetry.Text = "Retry"
-                                    $btnRetry.BackColor = [System.Drawing.Color]::FromArgb(0, 120, 212)
-                                    $btnRetry.ForeColor = [System.Drawing.Color]::White
-                                    $btnRetry.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
-                                    $btnRetry.FlatAppearance.BorderSize = 0
-                                    $btnRetry.Font = New-Object System.Drawing.Font("Segoe UI", 9, [System.Drawing.FontStyle]::Bold)
-                                    $btnRetry.Cursor = [System.Windows.Forms.Cursors]::Hand
-                                    $btnRetry.Add_Click({
-                                        $global:ProgressBar.Value = 90
-                                        $global:StatusText.Text = "Retrying domain connectivity..."
-                                        $global:StatusText.ForeColor = [System.Drawing.Color]::FromArgb(0, 120, 212)
-                                        [System.Windows.Forms.Application]::DoEvents()
-                                        $retryResult = Test-DomainReachability -DomainName $domainName
-                                        if ($retryResult.Success) {
-                                            $global:DomainCheckBox.Checked = $true
-                                            Log-Message "Domain '$domainName' now reachable"
-                                            $global:ProgressBar.Value = 100
-                                            $global:StatusText.Text = "[OK] Domain reachable - ready to import"
-                                            $global:StatusText.ForeColor = [System.Drawing.Color]::FromArgb(16, 124, 16)
-                                            [System.Windows.Forms.MessageBox]::Show("Domain '$domainName' is now reachable.","Domain OK","OK","Information") | Out-Null
-                                            $reachForm.Close()
-                                        } else {
-                                            Log-Message "Retry failed: $($retryResult.Error)"
-                                            $global:ProgressBar.Value = 0
-                                            $global:StatusText.Text = "[ERROR] Domain unreachable"
-                                            $global:StatusText.ForeColor = [System.Drawing.Color]::FromArgb(232, 17, 35)
-                                            [System.Windows.Forms.MessageBox]::Show("Still unreachable.`n`n$($retryResult.Error)","Retry Failed","OK","Warning") | Out-Null
-                                        }
-                                    })
-                                    $reachForm.Controls.Add($btnRetry)
-                                    
-                                    $btnClose = New-Object System.Windows.Forms.Button
-                                    $btnClose.Location = New-Object System.Drawing.Point(380,195)
-                                    $btnClose.Size = New-Object System.Drawing.Size(110,35)
-                                    $btnClose.Text = "Close"
-                                    $btnClose.BackColor = [System.Drawing.Color]::FromArgb(80, 80, 80)
-                                    $btnClose.ForeColor = [System.Drawing.Color]::White
-                                    $btnClose.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
-                                    $btnClose.FlatAppearance.BorderSize = 0
-                                    $btnClose.Font = New-Object System.Drawing.Font("Segoe UI", 9)
-                                    $btnClose.Cursor = [System.Windows.Forms.Cursors]::Hand
-                                    $btnClose.DialogResult = "OK"
-                                    $reachForm.Controls.Add($btnClose)
-                                    $reachForm.AcceptButton = $btnClose
-                                    
-                                    $reachForm.ShowDialog() | Out-Null
-                                    $reachForm.Dispose()
-                                    $global:ProgressBar.Value = 0
-                                    $global:StatusText.Text = "ZIP: $(Split-Path $global:SelectedZipPath -Leaf) - Domain unreachable"
-                                } else {
-                                    Log-Message "Domain '$domainName' reachable (pre-flight hint)"
-                                    $global:ProgressBar.Value = 100
-                                    $global:StatusText.Text = "ZIP: $(Split-Path $global:SelectedZipPath -Leaf) - Domain OK"
-                                    Start-Sleep -Milliseconds 500
-                                    $global:ProgressBar.Value = 0
-                                }
-                            }
-                        } else {
-                            Log-Message "Manifest found but not a domain profile (IsDomainUser=$($manifestObj.IsDomainUser))"
-                            $global:ProgressBar.Value = 0
-                            $global:StatusText.Text = "ZIP: $(Split-Path $global:SelectedZipPath -Leaf)"
-                        }
-                    } catch {
-                        Log-Message "Domain auto-detect parse failed: $($_.Exception.Message)"
+
+            Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction SilentlyContinue
+            $zip = [IO.Compression.ZipFile]::OpenRead($global:SelectedZipPath)
+            $entry = $zip.Entries | Where-Object { $_.FullName -ieq 'manifest.json' }
+
+            if ($entry) {
+
+                $sr = New-Object IO.StreamReader($entry.Open())
+                $jsonContent = $sr.ReadToEnd()
+                $sr.Dispose()
+                $zip.Dispose()
+
+                try {
+                    $manifestObj = $jsonContent | ConvertFrom-Json -ErrorAction Stop
+
+                    # AzureAD?
+                    if ($manifestObj.IsAzureADUser) {
+                        Log-Message "Manifest found for AzureAD profile: $($manifestObj.Username)"
+                        $global:ProgressBar.Value = 100
+                        $global:StatusText.Text = "ZIP: $(Split-Path $global:SelectedZipPath -Leaf) - AzureAD profile"
+                        $global:StatusText.ForeColor = [System.Drawing.Color]::FromArgb(0, 120, 212)
+                    }
+                    elseif ($manifestObj.IsDomainUser -and $manifestObj.Domain) {
+                        $global:StatusText.Text = "ZIP: $(Split-Path $global:SelectedZipPath -Leaf) - Domain profile"
+                    }
+                    else {
+                        Log-Message "Manifest found but not a domain profile (IsDomainUser=$($manifestObj.IsDomainUser))"
                         $global:ProgressBar.Value = 0
                         $global:StatusText.Text = "ZIP: $(Split-Path $global:SelectedZipPath -Leaf)"
                     }
-                } else {
-                    $zip.Dispose()
-                    Log-Message "No manifest.json in ZIP - skipping domain auto-detect"
+                }
+                catch {
+                    Log-Message "Domain auto-detect parse failed: $($_.Exception.Message)"
                     $global:ProgressBar.Value = 0
                     $global:StatusText.Text = "ZIP: $(Split-Path $global:SelectedZipPath -Leaf)"
                 }
-            } else {
+
+            }
+            else {
+                $zip.Dispose()
+                Log-Message "No manifest.json in ZIP - skipping auto-detect"
                 $global:ProgressBar.Value = 0
                 $global:StatusText.Text = "ZIP: $(Split-Path $global:SelectedZipPath -Leaf)"
             }
-        } catch {
-            Log-Message "Domain auto-detect skipped: $($_.Exception.Message)"
+        }
+        catch {
+            Log-Message "Auto-detect skipped: $($_.Exception.Message)"
             $global:ProgressBar.Value = 0
             $global:StatusText.Text = "ZIP: $(Split-Path $global:SelectedZipPath -Leaf)"
         }
     }
 })
-$global:ExportButton.Add_Click({
-    $u = $global:UserComboBox.Text.Trim()
-    if (-not $u) {
-        [System.Windows.Forms.MessageBox]::Show("Select username.","Error","OK","Error")
-        return
-    }
-    # Strip size suffix if present (e.g., "username - [756.6 MB]" -> "username")
-    if ($u -match '^(.+?)\s+-\s+\[.+\]$') {
-        $u = $matches[1].Trim()
-    }
-    # Extract short name from DOMAIN\username or COMPUTERNAME\username
-    $shortName = if ($u -match '\\') { ($u -split '\\',2)[1] } else { $u }
-    # Remove any remaining backslashes for safe filename
-    $shortName = $shortName -replace '\\',''
-    $dlg = New-Object System.Windows.Forms.SaveFileDialog
-    $dlg.Filter = "ZIP Files (*.zip)|*.zip"
-    $dlg.FileName = "$shortName-Export-$(Get-Date -f yyyyMMdd_HHmmss).zip"
-    if ($dlg.ShowDialog() -eq "OK") {
-        Export-UserProfile -Username $u -ZipPath $dlg.FileName
-    }
-})
-$global:ImportButton.Add_Click({
-    $u = $global:UserComboBox.Text.Trim()
-    if (-not $u) {
-        [System.Windows.Forms.MessageBox]::Show("Enter or select a username (e.g., 'john' or 'DOMAIN\john').`n`nYou can type a new username that doesn't exist yet - it will be created during import.", "Username Required","OK","Warning")
-        return
-    }
-    # Strip size suffix if present (e.g., "username - [756.6 MB]" -> "username")
-    if ($u -match '^(.+?)\s+-\s+\[.+\]$') {
-        $u = $matches[1].Trim()
-    }
-    if (-not $global:SelectedZipPath) {
-        [System.Windows.Forms.MessageBox]::Show("Browse and select a ZIP file first.", "Error","OK","Error")
-        return
-    }
-    Import-UserProfile -ZipPath $global:SelectedZipPath -Username $u
-    if ($global:DomainCheckBox.Checked) {
-        $computerName = $global:ComputerNameTextBox.Text.Trim()
-        $domainName = $global:DomainNameTextBox.Text.Trim()
-        if ([string]::IsNullOrWhiteSpace($domainName)) {
-            [System.Windows.Forms.MessageBox]::Show("Domain name is required when 'Join Domain After Import' is checked.", "Domain Required","OK","Warning")
-            return
-        }
-        $restartBehavior = $global:RestartComboBox.SelectedItem
-        $delaySeconds = 30
-        if ($restartBehavior -eq 'Delayed') {
-            if ([int]::TryParse($global:DelayTextBox.Text, [ref]$delaySeconds)) {
-                if ($delaySeconds -lt 5) { $delaySeconds = 5 }
-                if ($delaySeconds -gt 300) { $delaySeconds = 300 }
-            } else {
-                $delaySeconds = 30
-            }
-        }
-        Log-Message "Initiating domain join with restart behavior: $restartBehavior"
-        Join-Domain-Enhanced -ComputerName $computerName -DomainName $domainName -RestartBehavior $restartBehavior -DelaySeconds $delaySeconds -Credential $global:DomainCredential
-    }
-})
-$global:DomainJoinButton.Add_Click({
-    $computerName = $global:ComputerNameTextBox.Text.Trim()
-    $domainName = $global:DomainNameTextBox.Text.Trim()
-    if ([string]::IsNullOrWhiteSpace($domainName)) {
-        [System.Windows.Forms.MessageBox]::Show("Please enter a domain name.", "Domain Required","OK","Warning")
-        return
-    }
-    $restartBehavior = $global:RestartComboBox.SelectedItem
-    $delaySeconds = 30
-    if ($restartBehavior -eq 'Delayed') {
-        [int]::TryParse($global:DelayTextBox.Text, [ref]$delaySeconds) | Out-Null
-        $delaySeconds = [Math]::Max(5, [Math]::Min(300, $delaySeconds))
-    }
-    Log-Message "=== STANDALONE DOMAIN JOIN ==="
-    Log-Message "Domain: $domainName"
-    Log-Message "Computer Name: $(if($computerName){$computerName}else{'Keep current'})"
-    Log-Message "Restart Behavior: $restartBehavior"
-    Join-Domain-Enhanced -ComputerName $computerName -DomainName $domainName -RestartBehavior $restartBehavior -DelaySeconds $delaySeconds -Credential $global:DomainCredential
-})
 
-$global:DomainRetryButton.Add_Click({
-    $domainName = $global:DomainNameTextBox.Text.Trim()
-    if ([string]::IsNullOrWhiteSpace($domainName)) {
-        [System.Windows.Forms.MessageBox]::Show("Enter a domain name first.","Domain Required","OK","Warning") | Out-Null
-        return
-    }
-    if (-not (Get-Command Test-DomainReachability -ErrorAction SilentlyContinue)) {
-        [System.Windows.Forms.MessageBox]::Show("Reachability test function not available.","Unavailable","OK","Warning") | Out-Null
-        return
-    }
-    Log-Message "Retrying domain reachability: $domainName"
-    $global:StatusText.Text = "Testing domain reachability..."
-    [System.Windows.Forms.Application]::DoEvents()
-    $result = Test-DomainReachability -DomainName $domainName
-    if ($result.Success) {
-        Log-Message "Domain reachable: $domainName"
-        $global:StatusText.Text = "Domain reachable"
-        if (-not $global:DomainCheckBox.Checked) { $global:DomainCheckBox.Checked = $true }
-        [System.Windows.Forms.MessageBox]::Show("Domain '$domainName' is reachable.","Domain OK","OK","Information") | Out-Null
-    } else {
-        Log-Message "Domain unreachable: $($result.Error)"
-        $global:StatusText.Text = "Domain unreachable"
-        $global:DomainCheckBox.Checked = $false
-        [System.Windows.Forms.MessageBox]::Show("Domain '$domainName' unreachable.\n\n$($result.Error)","Domain Unreachable","OK","Warning") | Out-Null
-    }
-})
+
+
 
 # =============================================================================
 # LAUNCH

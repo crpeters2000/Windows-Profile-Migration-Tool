@@ -1,3 +1,40 @@
+# ProfileMigration.ps1 – Configuration
+
+## Config Object ($Config)
+- LogLevel: DEBUG, INFO, WARN, ERROR
+- RobocopyThreads: 8–32 (auto-detects CPU cores)
+- SevenZipPath: Path to 7z.exe (auto-detects/installs if missing)
+- ExcludeOST: Exclude Outlook OST files (default: true)
+- ExcludeTemp: Exclude temp folders (default: true)
+- ExcludeHives: Exclude registry hives (default: true)
+- ExportReport: Generate HTML report (default: true)
+- ImportReport: Generate HTML report (default: true)
+- WingetApps: Install apps from manifest (default: false)
+## AzureAD/Entra ID Detection
+- If any profile SID matches ^S-1-12-1-, treats as AzureAD/Entra ID
+- Handles DOMAIN\username and AzureAD\username formats
+- Robust detection logic for all user selection scenarios
+## Dialogs & UI
+- Modern flat design, color-coded status
+- Custom dialogs for errors/success (taller for full info display)
+- Improved dialog sizing for all feedback (2025)
+## Logging
+- Four levels: DEBUG, INFO, WARN, ERROR
+- Console, GUI, and file output
+## Example
+```powershell
+$Config = [PSCustomObject]@{
+    LogLevel = 'INFO'
+    RobocopyThreads = 16
+    SevenZipPath = 'C:\Program Files\7-Zip\7z.exe'
+    ExcludeOST = $true
+    ExcludeTemp = $true
+    ExcludeHives = $true
+    ExportReport = $true
+    ImportReport = $true
+    WingetApps = $false
+}
+```
 # Configuration Guide - Windows Profile Migration Tool
 
 ## Overview
