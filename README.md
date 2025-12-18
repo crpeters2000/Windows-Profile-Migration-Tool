@@ -1,6 +1,6 @@
 # ProfileMigration.ps1
 
-ProfileMigration.ps1 is a PowerShell 5.1 GUI tool for Windows profile migration. It supports domain, local, and AzureAD/Entra ID moves, registry hive SID rewriting, multi-threaded file operations, and a modern Windows Forms UI. Production-ready for Windows 11 24H2.
+ProfileMigration.ps1 is a PowerShell 5.1 GUI tool for Windows profile migration. It supports domain, local, and AzureAD/Entra ID moves, registry hive SID rewriting, multi-threaded file operations, and a modern Windows Forms UI. Production-ready for Windows 11 25H2.
 
 ## Features
 - Export/import/merge user profiles (local, domain, AzureAD/Entra ID)
