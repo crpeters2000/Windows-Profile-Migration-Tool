@@ -14399,7 +14399,7 @@ $global:BrowseButton.Add_Click({
 # =============================================================================
 $cpuCores = [Environment]::ProcessorCount
 $Config = @{
-    Version                     = '2.12.24'
+    Version                     = '2.12.25'
     DomainReachabilityTimeout   = 3000
     DomainJoinCountdown         = 10
     HiveUnloadMaxAttempts       = 3
