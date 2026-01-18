@@ -3,7 +3,7 @@
 ## General Questions
 
 ### Q: What is this tool used for?
-**A:** The Windows Profile Migration Tool transfers complete user profiles between Windows computers. It's designed for IT administrators performing hardware replacements, OS upgrades, or profile recovery operations.
+**A:** The Windows User Profile Migration Tool - FAQ (v2.12.25) transfers complete user profiles between Windows computers **and performs in-place conversions/repairs between account types (Local, Domain, AzureAD)**. It's designed for IT administrators performing hardware replacements, OS upgrades, domain migrations, profile recovery, or **permissions repair**.
 
 ### Q: Is this tool safe to use?
 **A:** Yes, when used correctly:
@@ -54,6 +54,12 @@
 - ❌ Browser caches
 - ❌ System files
 
+### Q: How does the Duplicate File finder work?
+**A:** The Cleanup Wizard identifies duplicate files to help save space:
+1.  **Size Match:** Finds files with identical file sizes.
+2.  **Hash Match:** Calculates MD5 hashes for those files to ensure they are truly identical.
+3.  **Safety:** By default, it keeps the *newest* copy and marks older ones for deletion, but you can review and select exactly which copies to keep. It will never select *all* copies for deletion automatically.
+
 ### Q: Can I migrate from Windows 10 to Windows 11?
 **A:** Yes, fully supported. The tool handles OS version differences automatically.
 
@@ -72,17 +78,14 @@
 2. Run migration
 3. Re-enable after completion
 
-Most antivirus software can be migrated, but license reactivation may be required.
-
 ### Q: Can I migrate a profile while the user is logged in?
-**A:** **No, strongly discouraged:**
-- ❌ Risk of file corruption
-- ❌ Incomplete data capture
-- ❌ Registry inconsistencies
-- ✅ Tool will warn you if user is logged in
-- ✅ Best practice: Log out user first
+**A:** **No, the user must be logged off.**
+However, the tool now handles this automatically:
+1. **Detection:** The tool proactively checks if the source user is currently logged in.
+2. **Resolution:** If a session is found, the tool offers to **force log off** the user for you.
+3. **Safety:** The tool verifies the session has completely ended before proceeding to ensure files are unlocked and registry hives can be loaded safely.
 
-**Exception:** Export can work if user is logged in elsewhere (different session), but not recommended.
+**Do not** attempt to bypass this check, as active sessions lock files and cause corruption.
 
 ---
 
@@ -113,16 +116,16 @@ Most antivirus software can be migrated, but license reactivation may be require
 - Retry export
 
 ### Q: How much disk space do I need for export?
-**A:** Formula:
-```
-Required Space = (Profile Size × 1.5) + Compressed ZIP
+**A:** You need free space equal to approximately **60-70% of the user profile size** on the destination drive.
 
-Example:
-Profile: 20 GB
-Temporary: 30 GB (during compression)
-Final ZIP: ~8 GB (40% compression ratio)
-Total needed: ~38 GB
-```
+**Formula:** `Profile Size × 0.7`
+
+**Example:**
+- Profile: 20 GB
+- Required Space: ~14 GB
+
+**Why so low?**
+The tool uses **Direct Stream Compression**, meaning it compresses files directly from the source to the final ZIP archive without creating a temporary copy of the profile folder first. The FAQ previously recommended 2x space, but this version is much more efficient.
 
 **Tip:** Check with `Get-PSDrive C:`
 
@@ -133,16 +136,12 @@ Total needed: ~38 GB
 - Click Save
 
 ### Q: What if 7-Zip is not installed?
-**A:** The tool will:
-1. Detect missing 7-Zip
-2. Show error with download link
-3. You install 7-Zip from https://www.7-zip.org/
-4. Restart tool
-5. Proceed with export
+**A:** The tool handles this automatically:
+1. **Auto-Detection:** Checks for existing 7-Zip installation.
+2. **Auto-Install:** If missing, it attempts to install it automatically using **Winget**.
+3. **Fallback:** If auto-install fails, it will provide a direct download link (https://www.7-zip.org/) for manual installation.
 
-**Installation:**
-- Use default location: `C:\Program Files\7-Zip\`
-- Install 64-bit version (if on 64-bit Windows)
+**Note:** 7-Zip is required for the high-performance compression used by this tool.
 
 ### Q: Can I export multiple profiles at once?
 **A:** No, one profile at a time. For batch operations:
@@ -166,17 +165,11 @@ Total needed: ~38 GB
 ## Import Questions
 
 ### Q: Do I need to create the user account first?
-**A:** Depends:
-
-**Local User:**
-- Tool will prompt to create if doesn't exist
-- You set password during import
-- Optional admin rights checkbox
-
-**Domain User:**
-- Account must exist in Active Directory
-- Computer can be joined to domain using built-in Domain Join feature (if not already joined)
-- You provide domain credentials during import
+**A:**
+- **Local User: No.** The tool will detect if the user is missing and offer to create it for you (including setting the password and Admin rights).
+- **Domain / AzureAD: Yes, the account must exist** in Active Directory or Entra ID.
+  - **Note:** You do **not** need to sign in with the user first. The tool can "pre-stage" the profile before the user's first login.
+  - **Domain Join:** The tool can also help you join the domain if needed.
 
 ### Q: What's the difference between Merge and Replace mode?
 **A:** 
@@ -206,9 +199,10 @@ Total needed: ~38 GB
 | "Profile not found" | Username doesn't match | Check spelling, use dropdown |
 | "ZIP not found" | Wrong path | Click Browse, select correct ZIP |
 | "Hash verification failed" | Corrupted transfer | Re-copy ZIP from source |
-| "User logged on" | Target user active | Log out user, retry |
+| "User logged on" | Target user active | Use "Force Logoff" option or sign out manually |
 | "Access denied" | Not administrator | Right-click > Run as Administrator |
 | "Disk full" | No space | Free up space on C: drive |
+| "ZIP archive corrupted" | Invalid ZIP file | Re-export or copy ZIP again (verified with `7z t`) |
 
 **General recovery:**
 1. Review log file: `Import-username-timestamp.log`
@@ -333,15 +327,13 @@ Copy-Item "C:\Users\john.backup_TIMESTAMP\NTUSER.DAT" "C:\Users\john\" -Force
 8. User logs in with domain credentials
 
 ### Q: Can I join the computer to domain using this tool?
-**A:** Yes! Built-in domain join:
+**A:** Yes! Use the **Join Now** button:
 
-1. Switch to "Domain Join" tab
-2. Enter domain: `CONTOSO.COM`
-3. Click "Test Domain Connectivity"
-4. If green, click "Join Domain"
-5. Enter domain admin credentials
-6. Choose restart option
-7. Computer joins and reboots
+1. Look for the **Join Now** button (top right of main window).
+2. Enter your domain name (e.g., `CONTOSO.COM`) text box next to it.
+3. Click **Join Now**.
+4. Enter domain admin credentials when prompted.
+5. The tool handles the rest (connectivity check, join, reboot prompt).
 
 **Requirements:**
 - Network connectivity to domain controller
@@ -358,17 +350,101 @@ Copy-Item "C:\Users\john.backup_TIMESTAMP\NTUSER.DAT" "C:\Users\john\" -Force
 
 **Import (requires setup):**
 1. Target computer **must be Entra ID joined**
-2. User **must sign in** with work/school account at least once
-3. Enter username as: `AzureAD\username` (e.g., `AzureAD\john.doe`)
+2. **No prior login required** - Tool uses Microsoft Graph to resolve SID
+3. Enter username in one of these formats:
+   - **Traditional format:** `AzureAD\username` (e.g., `AzureAD\john.doe`)
+   - **UPN format (NEW in v2.8.6):** `user@domain.com` (e.g., `john.doe@company.com`)
 4. Tool validates device join status
 5. If not joined, tool opens Settings → Access work or school
-6. Complete join, sign in, then retry import
+6. Complete join, then retry import
 
 **Key differences from domain migration:**
-- Username format: `AzureAD\username` (NOT email address)
+- Username format: `AzureAD\username` OR `user@domain.com` (UPN)
+- UPN format automatically detected as AzureAD user
 - No domain admin credentials needed
 - Device must be joined via Settings app
 - Tool provides guided setup with `ms-settings:workplace` link
+
+### Q: Can I convert between domain and AzureAD profiles?
+**A:** Yes! **NEW in v2.7.2** - Automatic domain↔AzureAD conversions with unjoin/join handling:
+
+**AzureAD → Domain Conversion:**
+The tool automatically handles the entire process:
+1. ✅ Detects AzureAD join status
+2. ✅ Prompts for mandatory unjoin confirmation
+3. ✅ Resolves source AzureAD SID from registry (before unjoin)
+4. ✅ Unjoins from AzureAD (`dsregcmd /leave`)
+5. ✅ Prompts for domain administrator credentials
+6. ✅ Joins the domain automatically
+7. ✅ Converts profile using pre-resolved SID
+8. ✅ Updates registry to point domain SID to profile
+9. ✅ Prompts for reboot
+
+**Domain → AzureAD Conversion:**
+The tool automatically handles the entire process:
+1. ✅ Detects domain join status
+2. ✅ Prompts for mandatory unjoin confirmation
+3. ✅ Unjoins from domain (`Remove-Computer`)
+4. ✅ Launches Windows Settings for AzureAD join
+5. ✅ Waits for you to complete AzureAD join
+6. ✅ Verifies AzureAD join succeeded
+7. ✅ Converts profile to AzureAD format
+8. ✅ Updates registry to point AzureAD SID to profile
+9. ✅ Prompts for reboot
+
+**Special Case - Same Username:**
+If source and target usernames are the same (e.g., both "cpeters"):
+- ✅ No file operations needed
+- ✅ Registry-only update (instant)
+- ✅ No overwrite prompt
+- ✅ All data preserved in place
+
+**No manual intervention required** - the tool handles everything!
+
+### Q: What if my domain and AzureAD tenant have the same name?
+**A:** This works perfectly! The tool is designed for this scenario:
+
+**Example:** Domain "cpmethod.local" and AzureAD tenant "cpmethod"
+- Source: Domain user `cpmethod\cpeters` → Profile at `C:\Users\cpeters`
+- Target: AzureAD user `cpeters@cpmethod.com` → Same profile at `C:\Users\cpeters`
+
+**What happens:**
+1. Tool detects paths are identical
+2. Skips all file operations
+3. Only updates registry entries
+4. Changes SID associations (domain SID → AzureAD SID)
+5. Instant conversion (< 1 minute)
+
+**Benefits:**
+- ✅ No data movement
+- ✅ No risk of data loss
+- ✅ Extremely fast
+- ✅ No disk space needed
+
+### Q: Do I need to manually unjoin from domain/AzureAD first?
+**A:** No! The tool handles this automatically:
+
+**Old way (manual):**
+1. Manually unjoin from domain/AzureAD
+2. Manually join target environment
+3. Run conversion
+4. Hope everything works
+
+**New way (automatic):**
+1. Click "Convert Profile"
+2. Select source and target
+3. Tool prompts for unjoin confirmation
+4. Tool handles unjoin → join → convert
+5. Done!
+
+**The tool will:**
+- ✅ Detect current join state
+- ✅ Prompt for mandatory unjoin (if needed)
+- ✅ Execute unjoin safely
+- ✅ Prompt for join credentials/setup
+- ✅ Verify join succeeded
+- ✅ Convert profile
+- ✅ Prompt for reboot
 
 ### Q: Domain join fails. What's wrong?
 **A:** Check these:
@@ -416,6 +492,24 @@ Copy-Item "C:\Users\john.backup_TIMESTAMP\NTUSER.DAT" "C:\Users\john\" -Force
 2. Import as local user: `john`
 3. User loses domain features
 4. Works as standard local account
+
+### Q: How do I repair a corrupted local profile?
+**A:** You can use the **Local to Local** conversion feature:
+1. Select "Convert Profile" mode.
+2. Select the **Source** user (e.g., `OldUser`).
+3. Select the **Target** user as the **SAME** user (`OldUser`).
+4. The tool will detect this is a **Repair** operation.
+5. It will:
+   - ✅ Reset file permissions (ACLs)
+   - ✅ Correct file ownership
+   - ✅ Refresh the registry profile entry
+   - ✅ Re-register AppX manifests
+   - ✅ Preserve all data files
+   
+**Use when:** 
+- User gets "Temporary Profile" errors.
+- Start Menu is broken.
+- "Access Denied" errors on own files.
 
 ---
 
@@ -517,8 +611,9 @@ Edit exclusions (advanced):
 **A:** Checklist:
 
 1. ✅ **Run as Administrator**
-   - Right-click PowerShell
-   - Select "Run as administrator"
+   - Open PowerShell as Administrator
+   - Navigate to script location
+   - Run: `powershell.exe -ExecutionPolicy Bypass -File ProfileMigration.ps1`
    - Retry
 
 2. ✅ **Check file permissions**
@@ -961,12 +1056,60 @@ $logo.SizeMode = 'Zoom'
 $global:Form.Controls.Add($logo)
 ```
 
+#### Q: How do I change the 7-Zip path?
+A: Click the **...** button in the header to open **Settings**. You can then browse and select the correct `7z.exe` executable.
+
+#### Q: When should I use Debug Mode?
+A: Enable **Debug Mode** if you experience mysterious export failures or if you want to verify exatamente which files 7-Zip is including/excluding. It provides granular output and preserves all temporary files for later inspection.
+
 ### Q: Is this tool open source?
 **A:** Check the LICENSE file in the distribution for terms of use and redistribution rights.
 
 ---
 
-**Last Updated:** December 2025  
-**Version:** 1.0  
+**Last Updated:** January 2026  
+**Version:** 2.10.109  
 
 **Didn't find your answer?** Check the [Technical Documentation](TECHNICAL-DOCS.md) or contact IT support.
+---
+
+## AzureAD & Profile Conversion
+
+### Q: What is Profile Conversion?
+**A:** A feature (v2.4.7+) that converts profiles between account types without export/import. Supports Local  AzureAD, Domain  AzureAD, and Local  Domain conversions.
+
+### Q: How do I convert local to AzureAD?
+**A:** Click **Convert Profile**  Select source (Local) and target (AzureAD with email format)  First time: Microsoft Graph module auto-installs, press Y for NuGet  Sign in to Graph  Conversion proceeds  Reboot.
+
+### Q: Do I need the AzureAD user to log in first?
+**A:** **No!** v2.4.7 uses Microsoft Graph API to resolve SIDs without prior login.
+
+### Q: What format for AzureAD usernames?
+**A:** Email/UPN format required: user@domain.com (not DOMAIN\user or just user)
+
+### Q: "NuGet provider needs to be installed" - what do I do?
+**A:** Normal for first-time. Press **Y** when PowerShell prompts. One-time setup.
+
+### Q: "Device is not AzureAD joined" - how to fix?
+**A:** Tool provides guided setup  Settings  Accounts  Access work or school  Connect  Join to Azure AD  Sign in  Complete wizard.
+
+### Q: What happens to profile folder name?
+**A:** Uses username-only: user@company.com  C:\Users\user
+
+### Q: Can I convert AzureAD back to local?
+**A:** Yes! Select AzureAD source, Local target, enter username, tool creates local user and converts.
+
+### Q: "Failed to retrieve SID from Microsoft Graph" - why?
+**A:** Check: 1) Signed in during auth, 2) Have permissions, 3) Email correct, 4) User exists in tenant, 5) Internet connection.
+
+### Q: Profile Conversion vs Export/Import?
+**A:** Conversion: Faster, same computer, no archive. Export/Import: Different computers, creates backup, network transfer.
+
+### Q: What is the "Unjoin from AzureAD" checkbox?
+**A:** When converting FROM an AzureAD profile, you can optionally unjoin the device from AzureAD. This removes the device from organizational management, disables conditional access, and removes SSO. Use when repurposing a device or leaving an organization.
+
+### Q: Should I check "Unjoin from AzureAD"?
+**A:** Only if you want to completely remove the device from your organization. If you're just converting the profile but staying in the organization, leave it unchecked.
+
+### Q: Can I rejoin AzureAD after unjoining?
+**A:** Yes, but the device will be treated as a new device. Go to Settings  Accounts  Access work or school  Connect  Join to Azure AD.

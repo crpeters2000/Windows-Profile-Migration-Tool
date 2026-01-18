@@ -1,7 +1,8 @@
-# ProfileMigration.ps1 – Configuration
+# ProfileMigration.ps1 – Configuration Guide (v2.12.25)
 
 ## Config Object ($Config)
-- LogLevel: DEBUG, INFO, WARN, ERROR
+- Version: Current script version (e.g., '2.12.22')
+- LogLevel: DEBUG, INFO, WARN, ERROR (Minimum level for display/recording)
 - RobocopyThreads: 8–32 (auto-detects CPU cores)
 - SevenZipPath: Path to 7z.exe (auto-detects/installs if missing)
 - ExcludeOST: Exclude Outlook OST files (default: true)
@@ -10,6 +11,9 @@
 - ExportReport: Generate HTML report (default: true)
 - ImportReport: Generate HTML report (default: true)
 - WingetApps: Install apps from manifest (default: false)
+- GenerateHTMLReports: Globally enable/disable HTML reports
+- AutoOpenReports: Automatically open reports in default browser
+- **Debug Mode**: Toggleable via UI for verbose 7-Zip logging and artifact preservation (overrides default log cleanup)
 ## AzureAD/Entra ID Detection
 - If any profile SID matches ^S-1-12-1-, treats as AzureAD/Entra ID
 - Handles DOMAIN\username and AzureAD\username formats
@@ -23,18 +27,36 @@
 - Console, GUI, and file output
 ## Example
 ```powershell
-$Config = [PSCustomObject]@{
-    LogLevel = 'INFO'
-    RobocopyThreads = 16
-    SevenZipPath = 'C:\Program Files\7-Zip\7z.exe'
-    ExcludeOST = $true
-    ExcludeTemp = $true
-    ExcludeHives = $true
-    ExportReport = $true
-    ImportReport = $true
-    WingetApps = $false
+$Config = @{
+    Version                     = '1.0.0'
+    LogLevel                    = 'INFO'
+    RobocopyThreads             = 16
+    SevenZipThreads             = 8
+    GenerateHTMLReports         = $true
+    AutoOpenReports             = $true
+    # ... other internal tunables
 }
 ```
+
+## Theme System
+The tool features a custom theme system that supports **Light** and **Dark** modes.
+
+### Automatic Detection
+On startup, the script detects the Windows "AppsUseLightTheme" registry setting and applies the matching theme.
+
+### Manual Toggle
+Users can toggle between Light (L) and Dark (D) modes using the button in the top-right corner of the header.
+
+## Debug Mode Operations
+Debug Mode can be enabled via the checkbox next to the **Export** button.
+
+### Functional Impact:
+1.  **7-Zip Verbosity**: Adds `-bb3` to 7-Zip arguments, logging every file processed.
+2.  **Exclusion Artifacts**: Copies temporary exclusion listfiles to the `Logs/` directory for audit.
+3.  **Cleanup Bypass**: Prevents the script from deleting the temporary scratch folder (`$env:TEMP\ProfileMigration_...`) on completion, allowing for manual inspection of artifacts like `manifest.json` and `Winget-Packages.json`.
+
+### Theme Definitions
+Themes are defined in the `$Themes` hashtable, allowing for easy customization of colors for panels, buttons, text, and logs.
 # Configuration Guide - Windows Profile Migration Tool
 
 ## Overview
@@ -49,23 +71,24 @@ All settings are defined in the `$Config` hashtable near the top of `ProfileMigr
 
 ```powershell
 $Config = @{
-    DomainReachabilityTimeout = 3000      # milliseconds for LDAP/DNS checks
-    DomainJoinCountdown       = 10        # seconds for restart warning
-    HiveUnloadMaxAttempts     = 3         # retry attempts for hive cleanup
-    HiveUnloadWaitMs          = 500       # milliseconds between retry attempts
-    MountPointMaxAttempts     = 5         # max collision detection attempts
-    ProgressUpdateIntervalMs  = 1000      # milliseconds between progress display updates
-    ExportProgressCheckMs     = 500       # milliseconds between export file count checks
-    RobocopyThreads           = [Math]::Min(32, [Math]::Max(8, $cpuCores))
-    RobocopyRetryCount        = 1         # /R parameter
-    RobocopyRetryWaitSec      = 1         # /W parameter
-    SevenZipThreads           = $cpuCores # Use all available CPU cores
+    Version                     = '2.12.22'     # Current script version
+    DomainReachabilityTimeout   = 3000      # milliseconds for LDAP/DNS checks
+    DomainJoinCountdown         = 10        # seconds for restart warning
+    HiveUnloadMaxAttempts       = 3         # retry attempts for hive cleanup
+    HiveUnloadWaitMs            = 500       # milliseconds between retry attempts
+    MountPointMaxAttempts       = 5         # max collision detection attempts
+    ProgressUpdateIntervalMs    = 1000      # milliseconds between progress display updates
+    ExportProgressCheckMs       = 500       # milliseconds between export file count checks
+    RobocopyThreads             = [Math]::Min(32, [Math]::Max(8, $cpuCores))
+    RobocopyRetryCount          = 1         # /R parameter
+    RobocopyRetryWaitSec        = 1         # /W parameter
+    SevenZipThreads             = $cpuCores # Use all available CPU cores
     ProfileValidationTimeoutSec = 10      # max time to validate profile path writeability
-    SizeEstimationDepth       = 3         # depth for fast size estimation
-    HashVerificationEnabled   = $true     # verify ZIP integrity
-    LogLevel                  = 'INFO'    # Minimum log level: DEBUG, INFO, WARN, ERROR
-    GenerateHTMLReports       = $true     # Generate HTML migration reports
-    AutoOpenReports           = $true     # Automatically open HTML reports after generation
+    SizeEstimationDepth         = 3           # depth for fast size estimation
+    HashVerificationEnabled     = $true       # verify ZIP integrity
+    LogLevel                    = 'INFO'      # Minimum log level: DEBUG, INFO, WARN, ERROR
+    GenerateHTMLReports         = $true       # Generate HTML migration reports
+    AutoOpenReports             = $true       # Automatically open HTML reports after generation
 }
 ```
 
@@ -803,5 +826,82 @@ $Config.ProgressUpdateIntervalMs = 10  # Too fast!
 
 ---
 
-**Document Version:** 1.0  
+**Document Version:** 2.12.8
 **Last Updated:** December 2025
+---
+
+### AzureAD & Microsoft Graph Settings
+
+#### Microsoft Graph PowerShell Module
+**Purpose:** Required for AzureAD profile conversions  
+**Type:** Auto-installed dependency  
+**Installation:** Automatic on first AzureAD conversion
+
+**Module details:**
+- **Name:** Microsoft.Graph.Users
+- **Scope:** CurrentUser (no admin rights needed for installation)
+- **Permissions:** User.Read.All (granted during first sign-in)
+- **Installation trigger:** First time converting to/from AzureAD profile
+
+**First-time setup:**
+1. Tool detects module not installed
+2. Dialog informs user about installation
+3. NuGet provider prompt appears (press Y)
+4. Module installs automatically
+5. Browser opens for Microsoft Graph authentication
+6. Sign in with account that has user read permissions
+7. Grant requested permissions
+8. Conversion proceeds
+
+**Manual installation (if needed):**
+```powershell
+Install-Module -Name Microsoft.Graph.Users -Scope CurrentUser -Force
+```
+
+**Manual uninstallation:**
+```powershell
+Uninstall-Module -Name Microsoft.Graph.Users
+```
+
+#### AzureAD Username Format
+**Requirement:** User Principal Name (UPN) in email format  
+**Format:** user@domain.com  
+**Examples:**
+-  john.doe@company.com
+-  jane.smith@contoso.onmicrosoft.com
+-  john.doe (missing domain)
+-  DOMAIN\john.doe (wrong format)
+
+**UI Guidance:**
+- Hint label appears when AzureAD radio button selected
+- Validation occurs before Microsoft Graph lookup
+- Clear error messages if format incorrect
+
+#### AzureAD Profile Folder Naming
+**Behavior:** Extracts username part from UPN  
+**Example:**
+- Input: john.doe@company.com
+- Folder: C:\Users\john.doe
+- Not: C:\Users\john.doe@company.com
+
+**Implementation:** Regex pattern ^([^@]+)@ extracts username before @
+
+#### AzureAD Join Requirements
+**For conversions to AzureAD:**
+- Device must be AzureAD/Entra ID joined
+- Verified via WMI query to Win32_ComputerSystem
+- Tool provides guided setup if not joined
+- Opens Settings  Accounts  Access work or school
+
+**Validation function:** Test-IsAzureADJoined
+
+#### AzureAD SID Format
+**Pattern:** S-1-12-1-*  
+**Example:** S-1-12-1-775943901-1139658206-3697090227-359018853  
+**Validation:** Test-IsAzureADSID function checks pattern match
+
+**Conversion process:**
+1. Query Microsoft Graph for user ObjectId
+2. Convert ObjectId to Windows SID format
+3. Validate SID matches AzureAD pattern
+4. Use SID for profile conversion
