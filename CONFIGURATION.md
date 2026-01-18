@@ -1,4 +1,4 @@
-# ProfileMigration.ps1 – Configuration Guide (v2.12.25)
+# ProfileMigration.ps1 – Configuration Guide (v2.13.0)
 
 ## Config Object ($Config)
 - Version: Current script version (e.g., '2.12.22')
@@ -56,7 +56,20 @@ Debug Mode can be enabled via the checkbox next to the **Export** button.
 3.  **Cleanup Bypass**: Prevents the script from deleting the temporary scratch folder (`$env:TEMP\ProfileMigration_...`) on completion, allowing for manual inspection of artifacts like `manifest.json` and `Winget-Packages.json`.
 
 ### Theme Definitions
-Themes are defined in the `$Themes` hashtable, allowing for easy customization of colors for panels, buttons, text, and logs.
+Themes are defined in the `$Themes` hashtable (`ProfileMigration.ps1` ~line 50), allowing for easy customization.
+
+**Available Keys:**
+- `FormBackColor`: Main window background
+- `HeaderBackColor` / `PanelBackColor`: Section configurations
+- `BorderColor`: Border lines
+- `LabelTextColor` / `HeaderTextColor` / `SubHeaderTextColor`: Typography
+- `TextBoxBackColor` / `TextBoxForeColor`: Input fields
+- `LogBoxBackColor` / `LogBoxForeColor`: Log viewer
+- `ProgressBarForeColor`: Progress indicator
+- `ButtonPrimary...`: Primary actions (Export/Import)
+- `ButtonSecondary...`: Cancel/Close actions
+- `ButtonSuccess...`: Green confirmation buttons
+- `ButtonDanger...`: Red delete/warning buttons
 # Configuration Guide - Windows Profile Migration Tool
 
 ## Overview
@@ -71,7 +84,7 @@ All settings are defined in the `$Config` hashtable near the top of `ProfileMigr
 
 ```powershell
 $Config = @{
-    Version                     = '2.12.22'     # Current script version
+    Version                     = 'v2.13.0'     # Current script version
     DomainReachabilityTimeout   = 3000      # milliseconds for LDAP/DNS checks
     DomainJoinCountdown         = 10        # seconds for restart warning
     HiveUnloadMaxAttempts       = 3         # retry attempts for hive cleanup

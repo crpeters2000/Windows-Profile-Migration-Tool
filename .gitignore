@@ -20,3 +20,20 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+extract_functions.py
+Extract-Functions-AST.ps1
+Extract-Functions.ps1
+repair_func_temp.ps1
+.gitignore
+run-extract.bat
+.agent/rules/code-style-guide.md
+.gitignore
+.agent/workflows/update-documentation.md
+analyze_functions.ps1
+remove_duplicates.py
+.agent/rules/general.md
+Clean-Functions.py
+Extract-Functions-Clean.ps1
+Functions_temp.ps1
+missing_functions.txt
+temp_backup.ps1

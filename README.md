@@ -1,6 +1,6 @@
-# Windows Profile Migration Tool v2.12.25
+# Windows Profile Migration Tool v2.13.0
 
-**Version:** v2.12.25 (January 2026)  
+**Version:** v2.13.0 (January 2026)  
 **Tested on:** Windows 11 25H2 (26200.7623)  
 **Status:** Production Ready
 
@@ -48,7 +48,34 @@ ProfileMigration.ps1 is a PowerShell 5.1 GUI tool for Windows profile migration 
 - ⚡ **7-Zip Multi-Threading** - Parallel compression (2-3x faster than single-threaded)
 - ⚡ **Robocopy Optimization** - Dynamic 8-32 threads for file operations (60% faster)
 - ⚡ **Smart Progress Updates** - Non-blocking UI with real-time status
-- ⚡ **Helper Function Library** - 81 reusable functions for improved code maintainability
+- ⚡ **Helper Function Library** - 65 reusable functions organized in dedicated module
+
+---
+
+## File Structure
+
+```
+ProfileMigration/
+├── ProfileMigration.ps1          # Main script with UI and business logic (~10,000 lines) - **Entry Point**
+├── Functions.ps1                 # Helper functions module (65 functions) - **REQUIRED**
+├── README.md                     # This file
+├── USER-GUIDE.md                 # Detailed usage instructions
+├── TECHNICAL-DOCS.md             # Architecture and internals
+├── FUNCTIONS.md                  # Auto-generated function reference
+├── analyze_functions.ps1         # Script to analyze and document functions
+└── backup.ps1                    # Backup utility
+```
+
+### Module Organization
+
+The `Functions.ps1` module must be located in the same directory as `ProfileMigration.ps1`. It is automatically loaded at startup and contains 65 helper functions organized into 6 categories:
+
+1. **Logging & UI (15 functions)** - Log-Message, Show-ModernDialog, theme management, etc.
+2. **Profile Management (20 functions)** - Profile detection, validation, ACL management
+3. **Registry & File System (12 functions)** - Hive mounting, SID rewriting, file operations
+4. **Domain & Azure AD (10 functions)** - Domain operations, credential management, join/unjoin
+5. **Applications & Packages (5 functions)** - Winget, AppX, 7-Zip management
+6. **Archive & Validation (3 functions)** - ZIP integrity, compression utilities
 
 ---
 
@@ -202,7 +229,29 @@ If the tool is unavailable, you can perform a manual restore:
 
 ## Version History
 
-### v2.12.25 (Current - January 2026)
+### v2.13.0 (Current - January 2026)
+- **Major Refactor**: Modular architecture implementation:
+    - Created `Functions.ps1` module with helper functions
+    - Reduced main script from ~14,445 to ~9,297 lines (35.6% reduction)
+    - **Deployment requirement**: Both ProfileMigration.ps1 and Functions.ps1 now required
+    - Simplified deployment: Just 2 files in same directory
+- **Clean Implementation**: Functions.ps1 contains only the 65 helper functions (no duplicates)
+- **Version Bump**: Changed to v2.13.0 to signal deployment requirement change
+- **File Size**: 
+    - ProfileMigration.ps1 reduced by ~225 KB (31.5%)
+    - Functions.ps1 is ~206 KB (optimized)
+
+### v2.12.26 (January 2026)
+- **Refactor**: Extracted 65 helper functions into dedicated `Functions.ps1` module:
+    - Reduced main script size from ~14,400 to ~10,000 lines
+    - Improved code organization and maintainability
+    - Functions organized into 6 logical categories
+    - Module automatically loaded at script startup
+    - **Simplified deployment**: Both .ps1 files in same directory
+- **Backup**: Created `Functions\ProfileMigration.ps1.backup` for safety
+- **Documentation**: Updated README.md with file structure and module organization
+
+### v2.12.25 (January 2026)
 - **Refactor**: Standardized Profile Cleanup Wizard logic:
     - Integrated `New-CleanupItem` helper for all 6 cleanup categories.
     - Added support for Duplicate File groups in cleanup helper.

@@ -268,6 +268,27 @@ Domain unjoin logic added in THREE places:
 
 ---
 
+## Arquitecture Overview
+
+As of version v2.13.0, the tool uses a modular architecture:
+
+1. **ProfileMigration.ps1 (The Controller)**
+    - Contains the entry point, UI definitions (WinForms), Global Configuration (`$Config`), Theme definitions (`$Themes`), and high-level event handlers.
+    - Responsible for user interaction and orchestrating the migration flow.
+
+2. **Functions.ps1 (The Engine)**
+    - Contains all 65 helper functions including logging, file operations, registry handling, and domain logic.
+    - **MUST** be present in the same directory as the main script.
+    - Loaded via dot-sourcing: `. $PSScriptRoot\Functions.ps1`
+
+### Execution Flow
+1. User starts `ProfileMigration.ps1`.
+2. Script sets up global variables (`$Config`, `$Themes`).
+3. Script looks for `Functions.ps1` in script directory.
+   - If missing: Displays error dialog and exits.
+   - If present: Loads functions into memory.
+4. Main Form initializes and UI is displayed.
+
 ## Complete API Reference (Internal Functions)
 
 The following is a comprehensive list of internal functions orchestrated by `ProfileMigration.ps1`.

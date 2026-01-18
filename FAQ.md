@@ -3,7 +3,7 @@
 ## General Questions
 
 ### Q: What is this tool used for?
-**A:** The Windows User Profile Migration Tool - FAQ (v2.12.25) transfers complete user profiles between Windows computers **and performs in-place conversions/repairs between account types (Local, Domain, AzureAD)**. It's designed for IT administrators performing hardware replacements, OS upgrades, domain migrations, profile recovery, or **permissions repair**.
+**A:** The Windows User Profile Migration Tool - FAQ (v2.13.0) transfers complete user profiles between Windows computers **and performs in-place conversions/repairs between account types (Local, Domain, AzureAD)**. It's designed for IT administrators performing hardware replacements, OS upgrades, domain migrations, profile recovery, or **permissions repair**.
 
 ### Q: Is this tool safe to use?
 **A:** Yes, when used correctly:
@@ -12,6 +12,12 @@
 - ✅ Tested on Windows 10/11 in production environments
 - ✅ Non-destructive merge mode available
 - ⚠️ **Always test on non-critical profiles first**
+
+### Q: Why do I see a "Could not translate SID" warning on startup?
+**A:** This is harmless. When the tool starts, it scans all profile registry entries to populate the user list. If your system has "orphaned" registry keys from deleted users, the tool logs a warning because it cannot find a matching username for that SID (e.g. `S-1-5-21-...-1003`). The tool safely ignores these entries and continues.
+
+### Q: Why won't the script start? (Missing Functions.ps1)
+**A:** As of v2.13.0, the tool uses a modular architecture. You **must** have `Functions.ps1` in the same folder as `ProfileMigration.ps1`. If you only copied the main script, it will fail to load. Please ensure both files are present.
 - ⚠️ **Ensure you have backups before migration**
 
 ### Q: Do I need special permissions?
@@ -1068,7 +1074,8 @@ A: Enable **Debug Mode** if you experience mysterious export failures or if you 
 ---
 
 **Last Updated:** January 2026  
-**Version:** 2.10.109  
+**Last Updated:** January 2026
+**Version:** v2.13.0  
 
 **Didn't find your answer?** Check the [Technical Documentation](TECHNICAL-DOCS.md) or contact IT support.
 ---
